@@ -1,0 +1,12 @@
+node_modules/
+.env
+data/
+*.db
+*.db-shm
+*.db-wal
+admin-activity.jsonl
+playwright-report/
+test-results/
+.DS_Store
+npm-debug.log
+signal.code-workspace

@@ -1,0 +1,24 @@
+{
+  "name": "signal",
+  "version": "1.0.0",
+  "description": "Signal — Agile health check survey app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "playwright test",
+    "db:migrate": "node scripts/db-maintenance.js migrate",
+    "db:retention": "node scripts/db-maintenance.js retention",
+    "db:vacuum": "node scripts/db-maintenance.js vacuum"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "better-sqlite3": "^12.10.0",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}
