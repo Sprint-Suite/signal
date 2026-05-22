@@ -382,3 +382,56 @@ test("a follow-up survey overlays its baseline on the report", async () => {
     await app.close();
   }
 });
+
+test("a signed-in admin can change their password and login email", async () => {
+  const app = await startApp();
+  try {
+    const cookie = await loginAsAdmin(app, "change@example.com");
+
+    // /me carries the account-detail fields the account page shows.
+    const me = await api(app.base, "GET", "/api/auth/me", { cookie });
+    assert.ok(me.json.user.createdAt);
+
+    // A wrong current password is refused.
+    const bad = await api(app.base, "POST", "/api/auth/change-password", {
+      cookie,
+      body: {
+        currentPassword: "wrong password here",
+        newPassword: "a brand new strong password"
+      }
+    });
+    assert.equal(bad.status, 403);
+
+    // The correct current password changes it.
+    const changed = await api(app.base, "POST", "/api/auth/change-password", {
+      cookie,
+      body: {
+        currentPassword: STRONG_PASSWORD,
+        newPassword: "a brand new strong password"
+      }
+    });
+    assert.equal(changed.status, 200);
+
+    // Change the login email.
+    const emailChanged = await api(app.base, "POST", "/api/auth/change-email", {
+      cookie,
+      body: {
+        currentPassword: "a brand new strong password",
+        newEmail: "moved@example.com"
+      }
+    });
+    assert.equal(emailChanged.status, 200);
+
+    // The new email + new password sign in; the old email no longer does.
+    const fresh = await api(app.base, "POST", "/api/auth/login", {
+      body: { email: "moved@example.com", password: "a brand new strong password" }
+    });
+    assert.equal(fresh.status, 200);
+    const stale = await api(app.base, "POST", "/api/auth/login", {
+      body: { email: "change@example.com", password: "a brand new strong password" }
+    });
+    assert.equal(stale.status, 401);
+  } finally {
+    await app.close();
+  }
+});

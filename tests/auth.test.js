@@ -251,3 +251,102 @@ test("resetPasswordWithToken rejects a weak new password", async () => {
   assert.equal(result.reason, "weak_password");
   conn.close();
 });
+
+test("changePassword updates the password when the current one is correct", async () => {
+  const conn = freshDb();
+  const user = await auth.registerUser(conn, {
+    email: "cp@example.com",
+    password: GOOD_PASSWORD
+  });
+  const NEW_PASSWORD = "a fresh and strong password";
+  const result = await auth.changePassword(
+    conn,
+    user.id,
+    GOOD_PASSWORD,
+    NEW_PASSWORD
+  );
+  assert.equal(result.ok, true);
+
+  const hash = db.getUserById(conn, user.id).password_hash;
+  assert.equal(await auth.verifyPassword(hash, NEW_PASSWORD), true);
+  assert.equal(await auth.verifyPassword(hash, GOOD_PASSWORD), false);
+  conn.close();
+});
+
+test("changePassword rejects a wrong current password and a weak new one", async () => {
+  const conn = freshDb();
+  const user = await auth.registerUser(conn, {
+    email: "cp2@example.com",
+    password: GOOD_PASSWORD
+  });
+
+  const wrong = await auth.changePassword(
+    conn,
+    user.id,
+    "not the current password",
+    "a fresh and strong password"
+  );
+  assert.equal(wrong.ok, false);
+  assert.equal(wrong.reason, "bad_current");
+
+  const weak = await auth.changePassword(conn, user.id, GOOD_PASSWORD, "tiny");
+  assert.equal(weak.ok, false);
+  assert.equal(weak.reason, "weak_password");
+  conn.close();
+});
+
+test("changeEmail updates the login email when the password is correct", async () => {
+  const conn = freshDb();
+  const user = await auth.registerUser(conn, {
+    email: "old@example.com",
+    password: GOOD_PASSWORD
+  });
+  const result = await auth.changeEmail(
+    conn,
+    user.id,
+    GOOD_PASSWORD,
+    "new@example.com"
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.email, "new@example.com");
+  assert.equal(db.getUserByEmail(conn, "new@example.com").id, user.id);
+  assert.equal(db.getUserByEmail(conn, "old@example.com"), null);
+  conn.close();
+});
+
+test("changeEmail rejects a wrong password, a bad email, and a taken email", async () => {
+  const conn = freshDb();
+  const user = await auth.registerUser(conn, {
+    email: "me@example.com",
+    password: GOOD_PASSWORD
+  });
+  await auth.registerUser(conn, {
+    email: "taken@example.com",
+    password: GOOD_PASSWORD
+  });
+
+  const wrong = await auth.changeEmail(
+    conn,
+    user.id,
+    "wrong password here",
+    "fresh@example.com"
+  );
+  assert.equal(wrong.reason, "bad_current");
+
+  const invalid = await auth.changeEmail(
+    conn,
+    user.id,
+    GOOD_PASSWORD,
+    "not-an-email"
+  );
+  assert.equal(invalid.reason, "invalid_email");
+
+  const taken = await auth.changeEmail(
+    conn,
+    user.id,
+    GOOD_PASSWORD,
+    "taken@example.com"
+  );
+  assert.equal(taken.reason, "email_exists");
+  conn.close();
+});
