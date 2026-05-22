@@ -95,3 +95,62 @@ async function copyText(text) {
     return false;
   }
 }
+
+/**
+ * A styled confirmation dialog — the in-page replacement for window.confirm().
+ * Resolves true when confirmed, false when cancelled (Cancel, Escape, or a
+ * click on the backdrop).
+ *
+ * @param {{title?, message?, confirmLabel?, cancelLabel?, danger?}} options
+ *        `danger` defaults to true (a destructive-looking confirm button).
+ */
+function confirmModal(options) {
+  const opts = options || {};
+  return new Promise((resolve) => {
+    const titleId = `modal-title-${Date.now()}`;
+    const cancelBtn = el("button", {
+      class: "btn",
+      type: "button",
+      text: opts.cancelLabel || "Cancel"
+    });
+    const confirmBtn = el("button", {
+      class: `btn ${opts.danger === false ? "btn-primary" : "btn-danger"}`,
+      type: "button",
+      text: opts.confirmLabel || "Confirm"
+    });
+    const overlay = el(
+      "div",
+      { class: "modal-overlay" },
+      el(
+        "div",
+        {
+          class: "modal-content",
+          role: "dialog",
+          "aria-modal": "true",
+          "aria-labelledby": titleId
+        },
+        el("h2", { id: titleId, text: opts.title || "Are you sure?" }),
+        opts.message ? el("p", { class: "modal-message", text: opts.message }) : null,
+        el("div", { class: "modal-actions" }, cancelBtn, confirmBtn)
+      )
+    );
+
+    function close(result) {
+      document.removeEventListener("keydown", onKey);
+      overlay.remove();
+      resolve(result);
+    }
+    function onKey(event) {
+      if (event.key === "Escape") close(false);
+    }
+    cancelBtn.addEventListener("click", () => close(false));
+    confirmBtn.addEventListener("click", () => close(true));
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) close(false); // backdrop click
+    });
+    document.addEventListener("keydown", onKey);
+
+    document.body.append(overlay);
+    confirmBtn.focus();
+  });
+}

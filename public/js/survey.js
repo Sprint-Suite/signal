@@ -181,13 +181,13 @@
     });
 
     byId("delete-survey").addEventListener("click", async () => {
-      if (
-        !window.confirm(
-          "Delete this survey and every response to it? This cannot be undone."
-        )
-      ) {
-        return;
-      }
+      const ok = await confirmModal({
+        title: "Delete survey",
+        message:
+          "Delete this survey and every response to it? This cannot be undone.",
+        confirmLabel: "Delete survey"
+      });
+      if (!ok) return;
       const r = await apiDelete(`/api/surveys/${encodeURIComponent(id)}`);
       if (r.ok) window.location.href = "/dashboard";
       else notice(byId("control-message"), "Could not delete the survey.", "error");

@@ -328,3 +328,33 @@ input:focus, select:focus, button:focus-visible {
   font-size: 0.8rem;
   color: var(--sig-text-faint);
 }
+
+/* --- Confirmation modal ------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(42, 42, 40, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: var(--sig-space-4);
+}
+.modal-overlay.hidden { display: none; }
+.modal-content {
+  width: min(420px, 100%);
+  background: var(--sig-bg);
+  border: 1px solid var(--sig-border);
+  border-radius: var(--sig-radius-lg);
+  box-shadow: 0 16px 44px rgba(42, 42, 40, 0.20);
+  padding: var(--sig-space-6);
+  animation: modalIn 160ms ease-out;
+}
+.modal-content h2 { margin: 0 0 var(--sig-space-2); font-size: 1.15rem; }
+.modal-message { margin: 0 0 var(--sig-space-6); color: var(--sig-text-muted); }
+.modal-actions { display: flex; justify-content: flex-end; gap: var(--sig-space-2); }
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}

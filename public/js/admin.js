@@ -79,13 +79,12 @@
   }
 
   async function rotateKey(team) {
-    if (
-      !window.confirm(
-        `Rotate the access key for "${team.name}"? The current key stops working.`
-      )
-    ) {
-      return;
-    }
+    const ok = await confirmModal({
+      title: "Rotate access key",
+      message: `Rotate the access key for "${team.name}"? The current key stops working immediately.`,
+      confirmLabel: "Rotate key"
+    });
+    if (!ok) return;
     const res = await apiPost(`/api/teams/${encodeURIComponent(team.id)}/rotate-key`);
     if (!res.ok) {
       notice(byId("team-message"), "Could not rotate the key.", "error");
@@ -95,7 +94,12 @@
   }
 
   async function deleteTeam(team) {
-    if (!window.confirm(`Delete the team "${team.name}"?`)) return;
+    const ok = await confirmModal({
+      title: "Delete team",
+      message: `Delete the team "${team.name}"? This cannot be undone.`,
+      confirmLabel: "Delete team"
+    });
+    if (!ok) return;
     const res = await apiDelete(`/api/teams/${encodeURIComponent(team.id)}`);
     if (!res.ok) {
       notice(
