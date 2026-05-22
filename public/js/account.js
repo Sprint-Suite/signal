@@ -50,9 +50,19 @@
     event.preventDefault();
     hide(byId("email-message"));
 
+    const newEmail = byId("ce-new").value.trim();
+    if (newEmail.toLowerCase() !== byId("ce-confirm").value.trim().toLowerCase()) {
+      notice(
+        byId("email-message"),
+        "The two email addresses do not match.",
+        "error"
+      );
+      return;
+    }
+
     byId("email-btn").disabled = true;
     const res = await apiPost("/api/auth/change-email", {
-      newEmail: byId("ce-new").value.trim(),
+      newEmail,
       currentPassword: byId("ce-current").value
     });
     byId("email-btn").disabled = false;
