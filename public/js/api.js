@@ -1,0 +1,97 @@
+"use strict";
+
+/* Shared browser helpers, loaded first on every page. No modules — the strict
+   CSP serves plain external scripts only. These names are intentionally
+   global for the per-page scripts that follow. */
+
+/** Element by id. */
+function byId(id) {
+  return document.getElementById(id);
+}
+
+/** A query-string parameter from the current URL. */
+function qsParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+/** Build a DOM node. attrs: class | text | html | onX listeners | attributes. */
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  if (attrs) {
+    for (const [key, value] of Object.entries(attrs)) {
+      if (value === null || value === undefined) continue;
+      if (key === "class") node.className = value;
+      else if (key === "text") node.textContent = value;
+      else if (key === "html") node.innerHTML = value;
+      else if (key.startsWith("on") && typeof value === "function") {
+        node.addEventListener(key.slice(2), value);
+      } else node.setAttribute(key, value);
+    }
+  }
+  for (const child of children.flat()) {
+    if (child === null || child === undefined || child === false) continue;
+    node.append(child.nodeType ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+/** Replace a node's children. */
+function setChildren(node, ...children) {
+  node.replaceChildren(...children.flat().filter(Boolean));
+}
+
+function show(node) {
+  if (node) node.classList.remove("hidden");
+}
+function hide(node) {
+  if (node) node.classList.add("hidden");
+}
+
+/** Send a JSON request. Resolves to { ok, status, data }. */
+async function apiSend(method, path, body) {
+  const res = await fetch(path, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+const apiGet = (path) => apiSend("GET", path);
+const apiPost = (path, body) => apiSend("POST", path, body);
+const apiDelete = (path) => apiSend("DELETE", path);
+
+/** Confirm an admin session; redirect to the login page if there is none. */
+async function requireSession() {
+  const res = await apiGet("/api/auth/me");
+  if (res.status === 401) {
+    window.location.href = "/";
+    return null;
+  }
+  return res.data && res.data.user;
+}
+
+/** Render a message into a notice element. kind: error | ok | info. */
+function notice(node, message, kind) {
+  if (!node) return;
+  node.className = `notice notice-${kind || "info"}`;
+  node.textContent = message;
+  show(node);
+}
+
+/** Copy text to the clipboard, falling back to a hidden textarea. */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}

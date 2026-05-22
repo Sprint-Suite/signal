@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teams &amp; admins — Signal</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/api.js" defer></script>
+  <script src="/js/admin.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand"><span class="brand-dot"></span>Signal</span>
+    <span class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" href="/dashboard">All surveys</a>
+      <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
+    </span>
+  </header>
+
+  <main class="page">
+    <h1>Teams &amp; admins</h1>
+
+    <div class="card">
+      <h2>Teams</h2>
+      <p class="faint">
+        A team is who a survey is for. Its access key is shown once on creation
+        or rotation — copy it then.
+      </p>
+
+      <div class="row">
+        <input type="text" id="team-name" placeholder="New team name" autocomplete="off">
+        <button id="create-team-btn" class="btn btn-primary" type="button">Create team</button>
+      </div>
+      <p id="team-message" class="notice hidden"></p>
+      <div id="key-reveal" class="hidden">
+        <p class="faint" id="key-reveal-label"></p>
+        <p id="key-reveal-value" class="key-box"></p>
+      </div>
+
+      <div id="team-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Invite an admin</h2>
+      <p class="faint">
+        The invited person receives a link to set their password. Their account
+        is created ready to use.
+      </p>
+      <div class="row">
+        <input type="email" id="invite-email" placeholder="colleague@example.com" autocomplete="off">
+        <button id="invite-btn" class="btn btn-primary" type="button">Send invite</button>
+      </div>
+      <p id="invite-message" class="notice hidden"></p>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,27 @@
+[Unit]
+Description=Signal — Agile health check app
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/signal
+EnvironmentFile=/var/www/signal/.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+# Run as a dedicated, unprivileged user. Create it with:
+#   sudo useradd --system --no-create-home --shell /usr/sbin/nologin signal
+User=signal
+Group=signal
+
+# Hardening.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+# The SQLite database and the audit log are the only writable paths.
+ReadWritePaths=/var/lib/signal /var/www/signal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey — Signal</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/api.js" defer></script>
+  <script src="/js/radar.js" defer></script>
+  <script src="/js/survey.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand"><span class="brand-dot"></span>Signal</span>
+    <span class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" href="/dashboard">All surveys</a>
+    </span>
+  </header>
+
+  <main class="page">
+    <p id="loading" class="muted">Loading…</p>
+    <p id="page-error" class="notice notice-error hidden"></p>
+
+    <!-- ============ Builder ============ -->
+    <section id="builder" class="hidden">
+      <h1>New survey</h1>
+
+      <p id="builder-no-teams" class="notice notice-info hidden">
+        You need a team first. <a href="/admin">Create a team</a>, then come back.
+      </p>
+
+      <div id="builder-form" class="card hidden">
+        <label class="field" for="team-select">
+          <span>Team</span>
+          <select id="team-select"></select>
+        </label>
+        <label class="field" for="template-select">
+          <span>Question template</span>
+          <select id="template-select"></select>
+        </label>
+
+        <div class="field">
+          <span>Run type</span>
+          <label class="row">
+            <input type="radio" name="run-type" id="run-baseline" value="baseline" checked>
+            <span>Baseline — a fresh, standalone run</span>
+          </label>
+          <label class="row">
+            <input type="radio" name="run-type" id="run-followup" value="followup">
+            <span>Follow-up — compared against an earlier run</span>
+          </label>
+        </div>
+
+        <label class="field hidden" id="baseline-field" for="baseline-select">
+          <span>Baseline survey to compare against</span>
+          <select id="baseline-select"></select>
+        </label>
+
+        <p id="builder-error" class="notice notice-error hidden"></p>
+        <button id="create-btn" class="btn btn-primary" type="button">
+          Create &amp; generate link
+        </button>
+      </div>
+
+      <div id="builder-result" class="card hidden">
+        <h2>Survey created</h2>
+        <p class="muted">Share this anonymous link with the team:</p>
+        <p id="result-link" class="key-box"></p>
+        <div class="row">
+          <button id="copy-result" class="btn btn-sm" type="button">Copy link</button>
+          <a class="btn btn-sm btn-primary" href="/dashboard">Done</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Report ============ -->
+    <section id="report" class="hidden">
+      <div class="report-head">
+        <p class="kicker">Health check report</p>
+        <h1 id="report-title">Survey</h1>
+        <p id="report-sub" class="muted"></p>
+      </div>
+
+      <div class="card" id="report-controls">
+        <h3>Survey link</h3>
+        <p id="share-link" class="key-box"></p>
+        <div class="row">
+          <button id="copy-share" class="btn btn-sm" type="button">Copy link</button>
+          <a id="csv-link" class="btn btn-sm hidden" href="#">Export CSV</a>
+          <button id="toggle-status" class="btn btn-sm" type="button"></button>
+          <button id="delete-survey" class="btn btn-sm btn-danger" type="button">Delete</button>
+        </div>
+        <p id="control-message" class="notice hidden"></p>
+      </div>
+
+      <p id="report-locked" class="notice notice-info hidden"></p>
+
+      <div id="report-body" class="hidden">
+        <div class="report-grid">
+          <div class="card">
+            <h2>Radar</h2>
+            <div id="radar" class="radar-wrap"></div>
+            <div class="legend">
+              <span class="legend-item">
+                <span class="legend-swatch legend-now"></span>This run
+              </span>
+              <span class="legend-item" id="legend-baseline">
+                <span class="legend-swatch legend-baseline"></span>Baseline
+              </span>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Focus areas</h2>
+            <p class="faint">Ranked by where attention helps most.</p>
+            <div id="focus"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>All axes</h2>
+          <div id="axes" class="axes-grid"></div>
+        </div>
+
+        <div class="card">
+          <h2>Per-question detail</h2>
+          <p class="faint">Ranked lowest first. Higher is healthier.</p>
+          <div id="breakdown"></div>
+        </div>
+
+        <p id="guidance" class="guidance"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
