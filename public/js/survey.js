@@ -321,6 +321,11 @@
     }
   }
 
+  byId("signout-btn").addEventListener("click", async () => {
+    await apiPost("/api/auth/logout");
+    window.location.href = "/";
+  });
+
   if (surveyId) reportMode(surveyId);
   else builderMode();
 })();
