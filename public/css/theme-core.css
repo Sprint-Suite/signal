@@ -1,0 +1,82 @@
+/* public/css/theme-core.css
+ *
+ * Shared design system for the Signal / Scrum Poker / Retrospective suite.
+ * This file is the canonical source of truth. Per-app stylesheets layer a
+ * palette + layout on top.
+ *
+ * Strict CSP forbids inline styles — every rule must live here or in
+ * theme-<app>.css.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Fonts — self-hosted variable woff2.
+ * ------------------------------------------------------------------------ */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/Fraunces.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Tokens — defaults. Per-app stylesheets override the palette tokens.
+ *    Spacing / radii / shadows / type tokens are shared across all apps.
+ * ------------------------------------------------------------------------ */
+:root {
+  /* Type */
+  --serif:  "Fraunces", Georgia, serif;
+  --sans:   "Inter", system-ui, -apple-system, sans-serif;
+  --mono:   "JetBrains Mono", ui-monospace, monospace;
+
+  /* Spacing scale */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px;
+  --s-4: 16px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+  /* Radii */
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pill: 999px;
+
+  /* Shadows (designed to sit on cream backgrounds) */
+  --shadow-sm: 0 1px 0 rgba(42, 31, 18, 0.04);
+  --shadow-md: 0 1px 0 rgba(42, 31, 18, 0.04), 0 8px 24px rgba(42, 31, 18, 0.06);
+  --shadow-lg: 0 1px 0 rgba(42, 31, 18, 0.04), 0 16px 44px rgba(42, 31, 18, 0.10);
+
+  /* Status colours — shared across all apps */
+  --ok:    #2A5A2A;
+  --warn:  #B8780A;
+  --err:   #B4232A;
+  --info:  #2D5FAA;
+  --ok-bg:   #DCE9DA;
+  --warn-bg: #F9E6C7;
+  --err-bg:  #F8D7DA;
+  --info-bg: #DCE5F4;
+
+  /* Palette defaults — overridden by theme-<app>.css. Defined here so the
+     components in section 4 are renderable even without an app overlay. */
+  --bg:        #FDF8EB;
+  --bg-warm:   #F4ECE0;
+  --surface:   #FFFFFF;
+  --border:    #E8D9C0;
+  --border-st: #C9B27A;
+  --ink:       #2A1F12;
+  --muted:     #8E6E4A;
+  --faint:     #B0916B;
+  --accent:    #6B4FE8;
+  --accent-on: #FFFFFF;
+  --accent-2:  #F5D87E;
+  --accent-3:  #FFCFB0;
+}
