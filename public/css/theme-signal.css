@@ -51,7 +51,7 @@
   z-index: 1;
   width: min(440px, 100%);
 }
-.sky-hero .brand { color: var(--accent-on); }
+.sky-hero > .brand { color: var(--accent-on); }
 
 /* Postcard tile — used on dashboard.html survey list */
 .postcard-tile {
