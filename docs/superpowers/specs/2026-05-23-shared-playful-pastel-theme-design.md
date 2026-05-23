@@ -38,7 +38,7 @@ These elements are **identical** across all three apps. They make the apps read 
 | UI / body | **Inter** (400/500/600/700) | Workhorse; already used by two of the apps. |
 | Data / mono | **JetBrains Mono** (400/600) | Codes, IDs, timestamps, vote counts. |
 
-Loaded from Google Fonts. System-font fallback chain for offline use: `Fraunces → Georgia → serif`, `Inter → system-ui → sans-serif`, `JetBrains Mono → ui-monospace → monospace`.
+**Self-hosted** as woff2 files at `/public/fonts/` in each app. All three apps run a strict CSP (`style-src 'self'`, `font-src 'self'` — retrospective even forbids `data:`), so Google Fonts CDN is not an option and no inline `<style>` blocks may be used. Fallback chain for the brief moment before the woff2s load: `Fraunces → Georgia → serif`, `Inter → system-ui → sans-serif`, `JetBrains Mono → ui-monospace → monospace`.
 
 ### 3.2 Illustration vocabulary
 
@@ -186,7 +186,7 @@ A single theme stylesheet is the source of truth. Two options to discuss at revi
 
 ### 6.4 Fonts
 
-Loaded once per page via `<link>` to Google Fonts in each app's HTML. Same `<link>` block across all three apps; lives in the shared `theme-core.css` companion snippet `theme-fonts.html` for easy paste.
+Each app self-hosts the woff2 files under `/public/fonts/`. `@font-face` declarations live in `theme-core.css` so any page that loads the stylesheet automatically gets the fonts. Variable-font flavours where available (Fraunces variable, Inter variable, JetBrains Mono variable). One file per axis to keep page weight reasonable (~300 KB total).
 
 ### 6.5 Accessibility
 
