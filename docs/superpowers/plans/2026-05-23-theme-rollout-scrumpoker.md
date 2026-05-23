@@ -119,7 +119,7 @@ const POKER = {
   "bg-warm": "#F4ECE0",
   surface:   "#FFFFFF",
   ink:       "#2A2118",
-  muted:     "#8E6E4A",
+  muted:     "#876641",
   accent:    "#6B4FE8",
   "accent-on": "#FFFFFF",
   "accent-2": "#F5D87E",
@@ -187,7 +187,7 @@ git commit -m "Add WCAG contrast tests for Scrum Poker palette"
   --border:    #E8D9C0;
   --border-st: #C9B27A;
   --ink:       #2A2118;
-  --muted:     #8E6E4A;
+  --muted:     #876641;
   --faint:     #B0916B;
   --accent:    #6B4FE8;
   --accent-on: #FFFFFF;

@@ -111,7 +111,7 @@ All three live on a shared paper foundation (`#FDF8EB` / `#FDF4E3`) so they read
 | Accent-2 | `#F5D87E` | Hero stickers |
 | Accent-3 | `#FFCFB0` | Secondary stickers |
 | Ink | `#2A2118` | Text |
-| Muted | `#8E6E4A` | Kicker, secondary text |
+| Muted | `#876641` | Kicker, secondary text (darkened from initial #8E6E4A to clear AA 4.5:1 against the cream bg; verified 4.94:1) |
 
 ### 4.3 Signal — "Sky & Peach"
 
