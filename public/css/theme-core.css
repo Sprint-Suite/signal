@@ -271,3 +271,57 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   from { opacity: 0; transform: translateY(6px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* ---------------------------------------------------------------------------
+ * 5. Chrome — topbar, footer, page shells
+ * ------------------------------------------------------------------------ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-6);
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand-glyph {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.topbar-actions { display: flex; gap: var(--s-2); align-items: center; }
+
+.page { padding: var(--s-6); max-width: 1040px; margin: 0 auto; }
+.page-narrow { max-width: 560px; }
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-6);
+}
+
+.stack > * + * { margin-top: var(--s-4); }
+.row { display: flex; gap: var(--s-3); flex-wrap: wrap; align-items: center; }
+.row-end { justify-content: flex-end; }
+.spread { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); }
+
+.app-footer {
+  text-align: center;
+  padding: var(--s-6);
+  font-size: 0.8rem;
+  color: var(--faint);
+}
+.app-footer a { color: var(--faint); }
