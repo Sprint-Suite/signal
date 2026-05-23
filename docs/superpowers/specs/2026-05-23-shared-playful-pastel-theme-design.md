@@ -95,7 +95,7 @@ All three live on a shared paper foundation (`#FDF8EB` / `#FDF4E3`) so they read
 |---|---|---|
 | Surface | `#FDF4E3` | Page background |
 | Surface-warm | `#E8C9A0` | Cork / hero areas |
-| Accent | `#E5484D` | Primary action, pin heads |
+| Accent | `#C8252A` | Primary action, pin heads (darkened from initial #E5484D to clear AA 4.5:1 with white text on the primary button; verified 5.59:1) |
 | Accent-2 | `#5B35D5` | Secondary pin head, links |
 | Accent-3 | `#F59E0B` | Tag colour, washi |
 | Ink | `#2A1F12` | Text, buttons |

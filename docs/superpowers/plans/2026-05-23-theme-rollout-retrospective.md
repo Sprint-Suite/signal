@@ -103,7 +103,7 @@ const RETRO = {
   surface:   "#FDF8EB",
   ink:       "#2A1F12",
   muted:     "#8B5E36",
-  accent:    "#E5484D",
+  accent:    "#C8252A",
   "accent-on": "#FFFFFF",
   "accent-2": "#5B35D5",
   "accent-3": "#F59E0B",
@@ -176,13 +176,13 @@ git commit -m "Add WCAG contrast tests for Retrospective palette"
   --ink:       #2A1F12;
   --muted:     #8B5E36;
   --faint:     #B0916B;
-  --accent:    #E5484D;
+  --accent:    #C8252A;
   --accent-on: #FFFFFF;
   --accent-2:  #5B35D5;   /* secondary pin head */
   --accent-3:  #F59E0B;   /* tag colour, washi */
 
   /* Pinboard-specific tokens */
-  --pin-red:    #E5484D;
+  --pin-red:    #C8252A;
   --pin-blue:   #5B35D5;
   --pin-yellow: #F59E0B;
   --pin-green:  #2A5A2A;
