@@ -10,3 +10,4 @@ test-results/
 .DS_Store
 npm-debug.log
 signal.code-workspace
+.superpowers/
