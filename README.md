@@ -45,3 +45,10 @@ npm run test:e2e  # Playwright end-to-end
 - `deploy/` — systemd unit and Nginx config.
 
 See [docs/signal-spec.md](docs/signal-spec.md) for the full build specification.
+
+## Design system
+
+Signal is the canonical home of the shared `theme-core` design system used
+by the Scrum Poker and Retrospective sister apps. See
+`docs/theme-core/README.md` for what to edit and how downstream repos
+sync it.
