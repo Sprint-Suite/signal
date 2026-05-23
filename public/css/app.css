@@ -329,6 +329,20 @@ input:focus, select:focus, button:focus-visible {
   color: var(--sig-text-faint);
 }
 
+/* --- License text block ------------------------------------------------- */
+.license-text {
+  font-family: var(--sig-font-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--sig-bg-subtle);
+  border: 1px solid var(--sig-border);
+  border-radius: var(--sig-radius-sm);
+  padding: var(--sig-space-4);
+  margin: var(--sig-space-4) 0 0;
+}
+
 /* --- Confirmation modal ------------------------------------------------- */
 .modal-overlay {
   position: fixed;
