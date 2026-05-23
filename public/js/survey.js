@@ -1,5 +1,14 @@
 "use strict";
 
+/** Map an axis score (0–5) to a weather glyph id from theme-illos.svg. */
+function weatherForScore(score) {
+  if (!Number.isFinite(score)) return { glyph: "cloud", cls: "axis-glyph-cloud" };
+  if (score >= 4)   return { glyph: "sun",   cls: "axis-glyph-sun" };
+  if (score >= 3)   return { glyph: "cloud", cls: "axis-glyph-cloud" };
+  if (score >= 2)   return { glyph: "wind",  cls: "axis-glyph-wind" };
+  return                    { glyph: "rain",  cls: "axis-glyph-rain" };
+}
+
 (function () {
   const surveyId = qsParam("id");
 
@@ -229,10 +238,17 @@
       byId("axes"),
       data.axes.map((a) => {
         const d = deltaInfo(a.delta);
+        const { glyph, cls } = weatherForScore(a.mean);
+        const glyphSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        glyphSvg.setAttribute("class", `axis-glyph ${cls}`);
+        glyphSvg.setAttribute("aria-hidden", "true");
+        const useEl = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        useEl.setAttribute("href", `/illos/theme-illos.svg#${glyph}`);
+        glyphSvg.append(useEl);
         return el(
           "div",
           { class: "axis-card" },
-          el("div", { class: "axis-card-name", text: a.name }),
+          el("div", { class: "axis-card-name" }, glyphSvg, a.name),
           el(
             "div",
             { class: "row" },
