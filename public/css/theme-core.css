@@ -325,3 +325,40 @@ input:focus, select:focus, textarea:focus, button:focus-visible {
   color: var(--faint);
 }
 .app-footer a { color: var(--faint); }
+
+/* ---------------------------------------------------------------------------
+ * 6. Motion — keyframes + reduced-motion respect
+ * ------------------------------------------------------------------------ */
+@keyframes drift-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pin-up {
+  0%   { opacity: 0; transform: scale(0.85) rotate(-4deg); }
+  60%  { opacity: 1; transform: scale(1.05) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes postcard-send {
+  0%   { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(120%) rotate(-6deg); opacity: 0; }
+}
+@keyframes sticker-place {
+  0%   { transform: scale(0.6) rotate(-12deg); opacity: 0; }
+  70%  { transform: scale(1.08) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.motion-drift-in    { animation: drift-in 240ms ease-out both; }
+.motion-pin-up      { animation: pin-up 200ms cubic-bezier(.34,1.56,.64,1) both; }
+.motion-send        { animation: postcard-send 280ms ease-in both; }
+.motion-place       { animation: sticker-place 240ms cubic-bezier(.34,1.56,.64,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .btn:hover { transform: none; }
+}
