@@ -67,8 +67,17 @@
       durationSeconds: (Date.now() - startTime) / 1000
     });
     if (res.ok) {
-      hide(byId("respond-question"));
-      show(byId("respond-thanks"));
+      const postcard = document.querySelector(".question-postcard");
+      const finish = () => {
+        hide(byId("respond-question"));
+        show(byId("respond-thanks"));
+      };
+      if (postcard) {
+        postcard.classList.add("motion-send");
+        postcard.addEventListener("animationend", finish, { once: true });
+      } else {
+        finish();
+      }
       return;
     }
     next.disabled = false;

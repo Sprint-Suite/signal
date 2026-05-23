@@ -59,7 +59,7 @@ test("full run: create a team and survey, answer it, view the report", async ({
 
   // --- View the report --------------------------------------------------
   await page.goto("/dashboard");
-  await page.click(".survey-row");
+  await page.click(".postcard-tile");
   await expect(page.locator("#report-body")).toBeVisible();
   await expect(page.locator("#radar svg")).toBeVisible();
   await expect(page.locator("#axes .axis-card")).toHaveCount(6);

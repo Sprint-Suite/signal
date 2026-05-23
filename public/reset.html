@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Choose a password — Signal</title>
-  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/theme-core.css">
+  <link rel="stylesheet" href="/css/theme-signal.css">
   <link rel="stylesheet" href="/css/app.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/reset.js" defer></script>
@@ -12,7 +13,10 @@
 <body>
   <main class="shell">
     <div class="card page-narrow">
-      <p class="brand"><span class="brand-dot"></span>Signal</p>
+      <p class="brand">
+        <svg class="brand-glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#postcard"/></svg>
+        <span>Signal</span>
+      </p>
       <h1>Choose a new password</h1>
 
       <form id="reset-form" novalidate>

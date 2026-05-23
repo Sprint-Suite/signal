@@ -95,6 +95,15 @@ npm run db:vacuum                 # reclaim space
 npm run db:retention 365          # drop surveys closed over a year ago
 ```
 
+## Static assets
+
+### Fonts (added 2026-05-23)
+
+Three self-hosted woff2 files live in `public/fonts/`. They are committed
+to the repo (~420 KB total). No CDN or build step is needed — Express
+serves them directly. If you switch CDNs or asset hosts, make sure the
+`/fonts/` path is preserved.
+
 ## Email delivery (deferred to v1.1)
 
 `MAIL_TRANSPORT=log` writes verification and reset links to the service log
