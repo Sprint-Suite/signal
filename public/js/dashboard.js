@@ -1,47 +1,60 @@
 "use strict";
 
+/**
+ * Pick a weather glyph that summarises a survey's status for the
+ * dashboard tile. Closed surveys lean on their average score; open
+ * surveys use a neutral cloud until results are in.
+ */
+function weatherGlyphFor(survey) {
+  if (survey.status !== "closed") return "cloud";
+  const avg = Number(survey.averageScore);
+  if (!Number.isFinite(avg)) return "cloud";
+  if (avg >= 4)   return "sun";
+  if (avg >= 3)   return "cloud";
+  if (avg >= 2)   return "wind";
+  return "rain";
+}
+
 (function () {
   byId("signout-btn").addEventListener("click", async () => {
     await apiPost("/api/auth/logout");
     window.location.href = "/";
   });
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   function formatDate(iso) {
     return iso ? new Date(iso).toLocaleDateString() : "";
   }
 
   function surveyRow(survey) {
-    const flagged =
-      survey.flaggedCount > 0
-        ? el("span", { class: "tag tag-flagged", text: `${survey.flaggedCount} flagged` })
-        : null;
     const responses = `${survey.responseCount} response${
       survey.responseCount === 1 ? "" : "s"
     }`;
+    const flaggedHtml = survey.flaggedCount > 0
+      ? ` · <span class="tag tag-flagged">${survey.flaggedCount} flagged</span>`
+      : "";
+    const followUp = survey.parentSurveyId ? " · follow-up" : "";
+    const glyph = weatherGlyphFor(survey);
 
-    return el(
-      "a",
-      { class: "survey-row", href: `/survey?id=${encodeURIComponent(survey.id)}` },
-      el(
-        "span",
-        { class: "survey-row-main" },
-        el("span", { class: "survey-row-team", text: survey.teamName }),
-        el("span", { class: "faint" },
-          ` · ${survey.templateName}`,
-          survey.parentSurveyId ? " · follow-up" : "",
-          ` · opened ${formatDate(survey.openedAt)}`)
-      ),
-      el(
-        "span",
-        { class: "row" },
-        el("span", { class: "muted" }, responses),
-        flagged,
-        el("span", {
-          class: `pill pill-${survey.status === "open" ? "open" : "closed"}`,
-          text: survey.status
-        })
-      )
-    );
+    const row = document.createElement("a");
+    row.className = "postcard-tile";
+    row.href = `/survey?id=${encodeURIComponent(survey.id)}`;
+    row.innerHTML = `
+      <svg class="glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#${glyph}"/></svg>
+      <div class="pt-main">
+        <div class="pt-team">${escapeHtml(survey.teamName)}</div>
+        <div class="pt-meta">${escapeHtml(survey.templateName)}${escapeHtml(followUp)} · opened ${escapeHtml(formatDate(survey.openedAt))} · ${escapeHtml(responses)}${flaggedHtml}</div>
+      </div>
+      <span class="pill ${survey.status === "open" ? "tag-ok" : "tag"}">${escapeHtml(survey.status)}</span>
+    `;
+    return row;
   }
 
   async function loadResend() {
