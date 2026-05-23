@@ -1,0 +1,108 @@
+/* public/css/theme-signal.css
+ *
+ * Signal's "Weather Postcards" overlay. Loaded AFTER theme-core.css to
+ * override palette tokens and add app-specific layouts/animations.
+ */
+
+:root {
+  /* --- Palette overrides — see spec §4.3 ---------------------------- */
+  --bg:        #FDF8EB;
+  --bg-warm:   #F4ECE0;
+  --bg-sky:    #BFD8EE;
+  --surface:   #FDF8EB;
+  --border:    #E0CFB8;
+  --border-st: #B89A78;
+  --ink:       #1F2C4C;
+  --muted:     #466091;
+  --faint:     #8AA3C8;
+  --accent:    #1F2C4C;
+  --accent-on: #FFF8EE;
+  --accent-2:  #E8A47D;
+  --accent-3:  #DCE9DA;
+}
+
+/* Hero — sky-peach dusk gradient used on /index and respond/landing */
+.sky-hero {
+  background: linear-gradient(180deg, var(--bg-sky) 0%, var(--accent-2) 100%);
+  color: var(--accent-on);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-6);
+  position: relative;
+  overflow: hidden;
+}
+.sky-hero .sky-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255,248,238,0.9) 1px, transparent 1.5px);
+  background-size: 80px 90px;
+  background-position: 12px 24px;
+  opacity: 0.35;
+}
+.sky-hero .card {
+  background: var(--surface);
+  color: var(--ink);
+  position: relative;
+  z-index: 1;
+  width: min(440px, 100%);
+}
+.sky-hero .brand { color: var(--accent-on); }
+
+/* Postcard tile — used on dashboard.html survey list */
+.postcard-tile {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: var(--s-4);
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.postcard-tile + .postcard-tile { margin-top: var(--s-2); }
+.postcard-tile:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.postcard-tile .glyph {
+  width: 40px; height: 40px;
+  color: var(--accent-2);
+}
+.postcard-tile .pt-team   { font-weight: 600; }
+.postcard-tile .pt-meta   { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+/* Per-question postcard — used on respond.html */
+.question-postcard {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--s-6);
+  position: relative;
+}
+.question-postcard::after {
+  /* stamp in the top-right corner */
+  content: "";
+  position: absolute;
+  top: var(--s-3); right: var(--s-3);
+  width: 28px; height: 36px;
+  background: var(--accent-2);
+  border: 1.5px dashed var(--surface);
+  border-radius: 2px;
+}
+
+/* Axis-condition glyphs in the report — used on survey.html */
+.axis-glyph {
+  width: 22px; height: 22px;
+  vertical-align: middle;
+  margin-right: var(--s-2);
+}
+.axis-glyph-sun   { color: var(--accent-2); }
+.axis-glyph-cloud { color: var(--muted); }
+.axis-glyph-rain  { color: var(--info); }
+.axis-glyph-wind  { color: var(--accent-3); }
