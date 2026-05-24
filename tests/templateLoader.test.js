@@ -13,8 +13,10 @@ function freshDb() {
   return db.initDb(":memory:");
 }
 
-function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "signal-tpl-"));
+function makeTempDir(t) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "signal-tpl-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  return dir;
 }
 
 function writeFile(dir, name, contents) {
@@ -44,9 +46,9 @@ const VALID = {
   ]
 };
 
-test("loader inserts a valid template, axes, and questions", () => {
+test("loader inserts a valid template, axes, and questions", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   writeFile(dir, "valid.json", VALID);
 
   const result = loadTemplatesFromDisk(conn, dir);
@@ -73,9 +75,9 @@ test("loader inserts a valid template, axes, and questions", () => {
   conn.close();
 });
 
-test("loader is idempotent — running twice does not duplicate", () => {
+test("loader is idempotent — running twice does not duplicate", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   writeFile(dir, "valid.json", VALID);
 
   loadTemplatesFromDisk(conn, dir);
@@ -90,7 +92,7 @@ test("loader is idempotent — running twice does not duplicate", () => {
   conn.close();
 });
 
-test("loader treats a missing directory as empty (no error)", () => {
+test("loader treats a missing directory as empty (no error)", (t) => {
   const conn = freshDb();
   const result = loadTemplatesFromDisk(conn, "/tmp/does-not-exist-signal-xyz");
   assert.equal(result.imported.length, 0);
@@ -99,17 +101,17 @@ test("loader treats a missing directory as empty (no error)", () => {
   conn.close();
 });
 
-test("loader treats an empty directory as empty (no error)", () => {
+test("loader treats an empty directory as empty (no error)", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   const result = loadTemplatesFromDisk(conn, dir);
   assert.equal(result.imported.length, 0);
   conn.close();
 });
 
-test("loader skips a file with bad JSON and continues", () => {
+test("loader skips a file with bad JSON and continues", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   writeFile(dir, "bad.json", "{ not json");
   writeFile(dir, "good.json", VALID);
 
@@ -122,9 +124,9 @@ test("loader skips a file with bad JSON and continues", () => {
   conn.close();
 });
 
-test("loader rejects a file with no id", () => {
+test("loader rejects a file with no id", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   const noId = { ...VALID };
   delete noId.id;
   writeFile(dir, "no-id.json", noId);
@@ -136,9 +138,9 @@ test("loader rejects a file with no id", () => {
   conn.close();
 });
 
-test("loader rejects a file with an empty axes array", () => {
+test("loader rejects a file with an empty axes array", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   writeFile(dir, "no-axes.json", { ...VALID, axes: [] });
 
   const result = loadTemplatesFromDisk(conn, dir);
@@ -148,9 +150,9 @@ test("loader rejects a file with an empty axes array", () => {
   conn.close();
 });
 
-test("loader rejects a question missing the reverse field", () => {
+test("loader rejects a question missing the reverse field", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   const noReverse = JSON.parse(JSON.stringify(VALID));
   delete noReverse.axes[0].questions[0].reverse;
   writeFile(dir, "no-reverse.json", noReverse);
@@ -162,9 +164,9 @@ test("loader rejects a question missing the reverse field", () => {
   conn.close();
 });
 
-test("loader rejects two files with the same id (second is skipped)", () => {
+test("loader rejects two files with the same id (second is skipped)", (t) => {
   const conn = freshDb();
-  const dir = makeTempDir();
+  const dir = makeTempDir(t);
   writeFile(dir, "a.json", VALID);
   writeFile(dir, "b.json", VALID);
 
@@ -172,5 +174,29 @@ test("loader rejects two files with the same id (second is skipped)", () => {
   assert.equal(result.imported.length, 1);
   assert.equal(result.errors.length, 1);
   assert.match(result.errors[0].reason, /duplicate/i);
+  conn.close();
+});
+
+test("loader rejects a file whose root is a JSON array", (t) => {
+  const conn = freshDb();
+  const dir = makeTempDir(t);
+  writeFile(dir, "array.json", [1, 2, 3]);
+
+  const result = loadTemplatesFromDisk(conn, dir);
+  assert.equal(result.imported.length, 0);
+  assert.equal(result.errors.length, 1);
+  assert.match(result.errors[0].reason, /JSON object/i);
+  conn.close();
+});
+
+test("loader rejects a file whose root is a JSON string", (t) => {
+  const conn = freshDb();
+  const dir = makeTempDir(t);
+  writeFile(dir, "string.json", '"hello"');
+
+  const result = loadTemplatesFromDisk(conn, dir);
+  assert.equal(result.imported.length, 0);
+  assert.equal(result.errors.length, 1);
+  assert.match(result.errors[0].reason, /JSON object/i);
   conn.close();
 });
