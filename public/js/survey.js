@@ -76,19 +76,53 @@ function weatherForScore(score) {
 
     function refreshBaselines() {
       const forTeam = surveys.filter((s) => s.teamId === teamSelect.value);
-      setChildren(
-        baselineSelect,
-        forTeam.length
-          ? forTeam.map((s) =>
-              el("option", {
-                value: s.id,
-                text: `${s.templateName} — opened ${formatDate(
-                  s.openedAt
-                )} (${s.responseCount} responses)`
-              })
-            )
-          : [el("option", { value: "", text: "No earlier surveys for this team" })]
+
+      if (forTeam.length === 0) {
+        setChildren(baselineSelect, [
+          el("option", { value: "", text: "No earlier surveys for this team" })
+        ]);
+        return;
+      }
+
+      // Group by templateId. Map preserves insertion order; we sort by name
+      // before rendering so the dropdown is alphabetical.
+      const groups = new Map();
+      for (const s of forTeam) {
+        if (!groups.has(s.templateId)) {
+          groups.set(s.templateId, {
+            templateId: s.templateId,
+            templateName: s.templateName,
+            templateVersion: s.templateVersion,
+            surveys: []
+          });
+        }
+        groups.get(s.templateId).surveys.push(s);
+      }
+
+      const ordered = Array.from(groups.values()).sort((a, b) =>
+        a.templateName.localeCompare(b.templateName)
       );
+
+      const children = [];
+      for (const group of ordered) {
+        const sorted = group.surveys.slice().sort((a, b) =>
+          String(b.openedAt).localeCompare(String(a.openedAt))
+        );
+        const options = sorted.map((s) =>
+          el("option", {
+            value: s.id,
+            text: `opened ${formatDate(s.openedAt)} (${s.responseCount} responses)`
+          })
+        );
+        children.push(
+          el(
+            "optgroup",
+            { label: `${group.templateName} (v${group.templateVersion})` },
+            options
+          )
+        );
+      }
+      setChildren(baselineSelect, children);
     }
     refreshBaselines();
     teamSelect.addEventListener("change", refreshBaselines);
