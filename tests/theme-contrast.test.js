@@ -10,27 +10,31 @@ const { contrastRatio, meetsAA } = require("../lib/contrast");
  * text). If a token gets recoloured later, this test catches regressions.
  */
 const SIGNAL = {
-  bg:        "#FDF8EB",
-  "bg-sky":  "#BFD8EE",
-  surface:   "#FDF8EB",
-  ink:       "#1F2C4C",
-  muted:     "#466091",
-  accent:    "#1F2C4C",
-  "accent-on": "#FFF8EE",
-  "accent-2": "#E8A47D",
-  "accent-3": "#DCE9DA",
-  ok:   "#2A5A2A",
-  err:  "#B4232A"
+  bg:           "#FDF8EB",
+  "bg-warm":    "#F4ECE0",
+  surface:      "#FFFFFF",
+  ink:          "#2A2118",
+  muted:        "#876641",
+  faint:        "#B0916B",
+  accent:       "#2E6F4E",
+  "accent-on":  "#FFFFFF",
+  "accent-soft":"#DEEBE2",
+  "accent-deep":"#245C40",
+  ok:    "#1E5A3A",
+  "ok-bg":"#D7E8DC",
+  err:   "#B4232A"
 };
 
 const BODY_PAIRS = [
-  ["ink",   "bg"],
-  ["ink",   "surface"],
-  ["muted", "bg"],
-  ["accent-on", "accent"],
-  ["err",   "bg"],
-  ["ok",    "bg"],
-  ["ink",   "bg-sky"]
+  ["ink",         "bg"],
+  ["ink",         "surface"],
+  ["ink",         "bg-warm"],
+  ["muted",       "bg"],
+  ["muted",       "surface"],
+  ["accent-on",   "accent"],
+  ["accent-deep", "accent-soft"],
+  ["ok",          "ok-bg"],
+  ["err",         "bg"]
 ];
 
 for (const [fg, bg] of BODY_PAIRS) {
