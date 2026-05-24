@@ -33,14 +33,18 @@ function weatherGlyphFor(survey) {
     return iso ? new Date(iso).toLocaleDateString() : "";
   }
 
-  function surveyRow(survey) {
+  function surveyRow(survey, followUpCount) {
     const responses = `${survey.responseCount} response${
       survey.responseCount === 1 ? "" : "s"
     }`;
     const flaggedHtml = survey.flaggedCount > 0
       ? ` · <span class="tag tag-flagged">${survey.flaggedCount} flagged</span>`
       : "";
-    const followUp = survey.parentSurveyId ? " · follow-up" : "";
+    const kindLabel = survey.parentSurveyId ? "Follow-up" : "Baseline";
+    const chip =
+      !survey.parentSurveyId && followUpCount > 0
+        ? `<span class="series-followup-chip">+${followUpCount} follow-up${followUpCount === 1 ? "" : "s"}</span>`
+        : "";
     const glyph = weatherGlyphFor(survey);
 
     const row = document.createElement("a");
@@ -49,12 +53,111 @@ function weatherGlyphFor(survey) {
     row.innerHTML = `
       <svg class="glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#${glyph}"/></svg>
       <div class="pt-main">
-        <div class="pt-team">${escapeHtml(survey.teamName)}</div>
-        <div class="pt-meta">${escapeHtml(survey.templateName)}${escapeHtml(followUp)} · opened ${escapeHtml(formatDate(survey.openedAt))} · ${escapeHtml(responses)}${flaggedHtml}</div>
+        <div class="pt-team">${escapeHtml(kindLabel)}${chip}</div>
+        <div class="pt-meta">opened ${escapeHtml(formatDate(survey.openedAt))} · ${escapeHtml(responses)}${flaggedHtml}</div>
       </div>
       <span class="pill ${survey.status === "open" ? "tag-ok" : "tag"}">${escapeHtml(survey.status)}</span>
     `;
     return row;
+  }
+
+  /**
+   * Build a nested tree from the flat survey list. Returns an array of teams,
+   * each containing templatesList (with chains of baselines + follow-ups) and
+   * an orphans bucket for follow-ups whose baseline was deleted.
+   */
+  function buildTree(surveys) {
+    const byTeam = new Map();
+    for (const s of surveys) {
+      if (!byTeam.has(s.teamId)) {
+        byTeam.set(s.teamId, { teamId: s.teamId, teamName: s.teamName, templates: new Map() });
+      }
+      const team = byTeam.get(s.teamId);
+      if (!team.templates.has(s.templateId)) {
+        team.templates.set(s.templateId, {
+          templateId: s.templateId,
+          templateName: s.templateName,
+          templateVersion: s.templateVersion,
+          baselines: [],
+          followUps: []
+        });
+      }
+      const grp = team.templates.get(s.templateId);
+      if (s.parentSurveyId) grp.followUps.push(s);
+      else grp.baselines.push(s);
+    }
+
+    const teams = Array.from(byTeam.values()).sort((a, b) =>
+      a.teamName.localeCompare(b.teamName)
+    );
+
+    for (const team of teams) {
+      const templates = Array.from(team.templates.values()).sort((a, b) =>
+        a.templateName.localeCompare(b.templateName)
+      );
+      team.templatesList = templates;
+      team.orphans = [];
+
+      for (const grp of templates) {
+        grp.baselines.sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt)));
+        const baselineIds = new Set(grp.baselines.map((b) => b.id));
+        grp.chains = grp.baselines.map((baseline) => ({
+          baseline,
+          followUps: grp.followUps
+            .filter((f) => f.parentSurveyId === baseline.id)
+            .sort((a, b) => String(a.openedAt).localeCompare(String(b.openedAt)))
+        }));
+        // Anything whose parentSurveyId doesn't match a baseline in this group
+        // is an orphan at the team level.
+        for (const f of grp.followUps) {
+          if (!baselineIds.has(f.parentSurveyId)) team.orphans.push(f);
+        }
+      }
+    }
+    return teams;
+  }
+
+  function renderTree(tree, container) {
+    container.innerHTML = "";
+    for (const team of tree) {
+      const teamHeader = document.createElement("h2");
+      teamHeader.className = "series-team-name";
+      teamHeader.textContent = team.teamName;
+      container.appendChild(teamHeader);
+
+      for (const grp of team.templatesList) {
+        if (grp.chains.length === 0) continue;
+        const tplHeader = document.createElement("div");
+        tplHeader.className = "series-template-name";
+        tplHeader.textContent = `${grp.templateName} (v${grp.templateVersion})`;
+        container.appendChild(tplHeader);
+
+        for (const chain of grp.chains) {
+          container.appendChild(surveyRow(chain.baseline, chain.followUps.length));
+          if (chain.followUps.length > 0) {
+            const wrap = document.createElement("div");
+            wrap.className = "series-followups";
+            for (const f of chain.followUps) {
+              wrap.appendChild(surveyRow(f, 0));
+            }
+            container.appendChild(wrap);
+          }
+        }
+      }
+
+      if (team.orphans.length > 0) {
+        const label = document.createElement("div");
+        label.className = "series-orphans-label";
+        label.textContent = "Orphaned follow-ups (baseline deleted)";
+        container.appendChild(label);
+        const wrap = document.createElement("div");
+        wrap.className = "series-followups";
+        for (const f of team.orphans) {
+          wrap.appendChild(surveyRow(f, 0));
+        }
+        container.appendChild(wrap);
+      }
+    }
   }
 
   async function loadResend() {
@@ -90,7 +193,7 @@ function weatherGlyphFor(survey) {
       show(byId("empty-state"));
       return;
     }
-    setChildren(list, surveys.map(surveyRow));
+    renderTree(buildTree(surveys), list);
   }
 
   init();
