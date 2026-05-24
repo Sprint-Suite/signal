@@ -33,6 +33,29 @@ test("the v1 question bank seeds 1 template, 6 axes, 24 questions", () => {
   conn.close();
 });
 
+test("listSurveysWithCounts exposes template version", () => {
+  const conn = freshDb();
+  // Set up a team and a survey under the seeded template.
+  const template = db.getActiveTemplate(conn);
+  const team = db.createTeam(conn, {
+    name: "Team Version",
+    keyHash: "h",
+    keySalt: "s",
+    weak: false
+  });
+  db.createSurvey(conn, {
+    teamId: team.id,
+    templateId: template.id,
+    parentSurveyId: null,
+    accessCode: "ABCDEF1234"
+  });
+
+  const rows = db.listSurveysWithCounts(conn);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].template_version, 1);
+  conn.close();
+});
+
 test("seeding is idempotent — re-seeding does not duplicate", () => {
   const conn = freshDb();
   db.seedQuestionBank(conn);
