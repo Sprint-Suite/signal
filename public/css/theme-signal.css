@@ -75,10 +75,12 @@
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 .postcard-tile + .postcard-tile { margin-top: var(--s-2); }
-.postcard-tile:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-md);
+@media (hover: hover) {
+  .postcard-tile:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-md);
+  }
 }
 .postcard-tile .glyph {
   width: 40px; height: 40px;

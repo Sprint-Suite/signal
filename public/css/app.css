@@ -56,6 +56,16 @@
 .survey-row-main { min-width: 0; }
 .survey-row-team { font-weight: 600; }
 
+/* On narrow screens stack the team name above its action buttons so the
+   row stops looking lopsided when the name wraps. */
+@media (max-width: 599px) {
+  .survey-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-3);
+  }
+}
+
 /* --- Report ------------------------------------------------------------- */
 .report-head { margin-bottom: var(--s-6); }
 .report-grid { display: grid; grid-template-columns: 1fr; gap: var(--s-4); }
@@ -174,6 +184,34 @@
    max-width (e.g. the dashboard inside .page) and the note should not
    wrap awkwardly. */
 .footer-note-wide { max-width: none; }
+
+/* --- Mobile topbar pills ------------------------------------------------ */
+.topbar-actions .btn { white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .topbar { padding: var(--s-2) var(--s-3); gap: var(--s-2); }
+  .topbar-actions { gap: var(--s-1); }
+  .topbar-actions .btn {
+    font-size: 0.8125rem;
+    padding-inline: var(--s-3);
+  }
+}
+
+/* --- Radio option row (used in New Survey "Run type") -------------------- */
+.radio-option {
+  display: flex;
+  align-items: flex-start;      /* dot lines up with first line of label */
+  gap: 0.625rem;
+  margin-block: var(--s-2);
+  cursor: pointer;
+}
+.radio-option input[type="radio"] {
+  flex-shrink: 0;               /* dot never squashes when label wraps */
+  margin-top: 0.2em;            /* optical nudge to cap height of first line */
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.radio-option > span { line-height: 1.45; }
 
 /* --- License text block ------------------------------------------------- */
 .license-text {

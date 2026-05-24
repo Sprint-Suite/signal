@@ -149,9 +149,14 @@ p { margin: 0 0 var(--s-3); }
 .card {
   transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
-.card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-md);
+/* Hover ring only on devices that actually hover. On touch, :hover sticks
+   after a tap and leaves a stray green border on whichever card was last
+   touched (was visible on the Radar card on mobile). */
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-md);
+  }
 }
 
 /* --- Button --- */
