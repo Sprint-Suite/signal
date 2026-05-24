@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+      - 'feature/**'
+
+jobs:
+  checks:
+    name: Node checks
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install browser dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Check server syntax
+        run: node --check server.js
+
+      - name: Check CLI syntax
+        run: node --check manageKeys.js
+
+      - name: Check Playwright config syntax
+        run: node --check playwright.config.js
+
+      - name: Check library syntax
+        run: |
+          for file in lib/*.js scripts/*.js; do
+            node --check "$file"
+          done
+
+      - name: Check browser script syntax
+        run: |
+          for file in public/js/*.js; do
+            node --check "$file"
+          done
+
+      - name: Check test syntax
+        run: |
+          for file in tests/*.test.js; do
+            node --check "$file"
+          done
+          for file in tests/e2e/*.js; do
+            node --check "$file"
+          done
+
+      - name: Run unit and integration tests
+        run: npm test
+
+      - name: Run browser smoke tests
+        run: npm run test:e2e
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev
