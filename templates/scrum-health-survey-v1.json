@@ -1,0 +1,67 @@
+{
+  "id": "scrum-health-survey-v1",
+  "name": "Scrum Health Survey",
+  "version": 1,
+  "axes": [
+    {
+      "name": "Sprint Goal & Planning",
+      "description": "How clearly the team plans toward a shared sprint goal.",
+      "questions": [
+        { "text": "We have a clear Sprint Goal that guides our trade-offs during the sprint.", "reverse": false },
+        { "text": "Sprint Planning produces a plan the whole team believes in, not a list handed to us.", "reverse": false },
+        { "text": "We plan to realistic capacity and rarely stuff the sprint full.", "reverse": false },
+        { "text": "We finish sprints with the Sprint Goal achieved, not just items ticked off.", "reverse": false }
+      ]
+    },
+    {
+      "name": "Daily Scrum & Flow",
+      "description": "Whether the daily scrum keeps work flowing toward the goal.",
+      "questions": [
+        { "text": "Our daily scrum helps us re-plan the day together, not report status to one person.", "reverse": false },
+        { "text": "We focus the daily scrum on progress toward the Sprint Goal.", "reverse": false },
+        { "text": "Blockers raised in the daily scrum get owned and followed up.", "reverse": false },
+        { "text": "We swarm on the most important work rather than each holding our own lane.", "reverse": false }
+      ]
+    },
+    {
+      "name": "Review & Stakeholders",
+      "description": "Whether the sprint review is a real conversation with stakeholders.",
+      "questions": [
+        { "text": "Our sprint review is a real working conversation with stakeholders, not a one-way demo.", "reverse": false },
+        { "text": "Stakeholders give us useful feedback that reshapes the backlog.", "reverse": false },
+        { "text": "We show a genuinely usable increment at review, not unfinished work dressed as done.", "reverse": false },
+        { "text": "The right stakeholders show up to the review and engage with what we built.", "reverse": false }
+      ]
+    },
+    {
+      "name": "Retrospective & Improvement",
+      "description": "Whether retrospectives surface honest issues and produce real change.",
+      "questions": [
+        { "text": "Our retrospectives surface honest issues without blame.", "reverse": false },
+        { "text": "We commit to a small number of specific, owned improvement actions each retro.", "reverse": false },
+        { "text": "Actions from retros actually get done before the next one.", "reverse": false },
+        { "text": "We track whether our improvement actions are making things better.", "reverse": false }
+      ]
+    },
+    {
+      "name": "Backlog & Product Ownership",
+      "description": "Whether the backlog is ready, ordered, and owned with intent.",
+      "questions": [
+        { "text": "The top of our backlog is refined and ready before planning.", "reverse": false },
+        { "text": "Our Product Owner is available and decisive when we need direction.", "reverse": false },
+        { "text": "Our backlog is clearly ordered by value, not a dumping ground.", "reverse": false },
+        { "text": "We share a clear understanding of why each top item matters.", "reverse": false }
+      ]
+    },
+    {
+      "name": "Increment & Definition of Done",
+      "description": "Whether each sprint produces a real, releasable increment.",
+      "questions": [
+        { "text": "We have a clear Definition of Done that the whole team shares and applies.", "reverse": false },
+        { "text": "Each sprint we produce a usable, potentially releasable increment.", "reverse": false },
+        { "text": "Work marked \"done\" rarely bounces back as incomplete or defective.", "reverse": false },
+        { "text": "Our Definition of Done covers quality, not just feature completion.", "reverse": false }
+      ]
+    }
+  ]
+}
