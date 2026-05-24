@@ -37,10 +37,6 @@
 .tag-divided { background: var(--info-bg); color: var(--info); }
 .tag-flagged { background: var(--warn-bg); color: var(--warn); }
 
-/* --- Signal-specific pill variants -------------------------------------- */
-.pill-open   { background: var(--accent-3); color: var(--ok); }
-.pill-closed { background: var(--bg-warm);  color: var(--muted); }
-
 /* --- Survey list -------------------------------------------------------- */
 .survey-row {
   display: flex;
@@ -161,7 +157,7 @@
   cursor: pointer;
 }
 .scale-option:hover    { background: var(--bg); }
-.scale-option.selected { border-color: var(--accent); background: var(--accent-3); }
+.scale-option.selected { border-color: var(--accent); background: var(--accent-soft); }
 .scale-option input    { width: auto; }
 .scale-num  { font-family: var(--mono); font-weight: 700; color: var(--muted); }
 .respond-nav { margin-top: var(--s-6); }

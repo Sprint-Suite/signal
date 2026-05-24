@@ -5,25 +5,31 @@
  */
 
 :root {
-  /* --- Palette overrides — see spec §4.3 ---------------------------- */
-  --bg:        #FDF8EB;
-  --bg-warm:   #F4ECE0;
-  --bg-sky:    #BFD8EE;
-  --surface:   #FDF8EB;
-  --border:    #E0CFB8;
-  --border-st: #B89A78;
-  --ink:       #1F2C4C;
-  --muted:     #466091;
-  --faint:     #8AA3C8;
-  --accent:    #1F2C4C;
-  --accent-on: #FFF8EE;
-  --accent-2:  #E8A47D;
-  --accent-3:  #DCE9DA;
+  /* --- Palette overrides — forest accent per forestbuild-spec.md §1 + §4.2 - */
+  --bg:          #FDF8EB;
+  --bg-warm:     #F4ECE0;
+  --surface:     #FFFFFF;
+  --border:      #E8D9C0;
+  --border-st:   #C9B27A;
+  --ink:         #2A2118;
+  --muted:       #876641;
+  --faint:       #B0916B;
+  --accent:      #2E6F4E;
+  --accent-on:   #FFFFFF;
+  --accent-soft: #DEEBE2;
+  --accent-deep: #245C40;
+  /* Status overrides — pull --ok off the accent so green button vs.
+     green badge stay visibly distinct (spec §1.3). */
+  --ok:    #1E5A3A;
+  --ok-bg: #D7E8DC;
 }
 
-/* Hero — sky-peach dusk gradient used on /index and respond/landing */
+/* Hero — forest panel used on /index and respond/landing sign-in.
+   Was a sky→peach dusk gradient; now a solid forest field so the
+   white card inside reads cleanly and the accent green carries the
+   identity. */
 .sky-hero {
-  background: linear-gradient(180deg, var(--bg-sky) 0%, var(--accent-2) 100%);
+  background: var(--accent);
   color: var(--accent-on);
   min-height: 100vh;
   display: flex;
@@ -39,10 +45,10 @@
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle, rgba(255,248,238,0.9) 1px, transparent 1.5px);
+    radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1.5px);
   background-size: 80px 90px;
   background-position: 12px 24px;
-  opacity: 0.35;
+  opacity: 0.18;
 }
 .sky-hero .card {
   background: var(--surface);
@@ -56,7 +62,7 @@
 /* Postcard tile — used on dashboard.html survey list */
 .postcard-tile {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--r-md);
   padding: var(--s-4);
   display: grid;
@@ -66,13 +72,17 @@
   text-decoration: none;
   color: inherit;
   box-shadow: var(--shadow-sm);
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 .postcard-tile + .postcard-tile { margin-top: var(--s-2); }
-.postcard-tile:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.postcard-tile:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-md);
+}
 .postcard-tile .glyph {
   width: 40px; height: 40px;
-  color: var(--accent-2);
+  color: var(--accent);
 }
 .postcard-tile .pt-team   { font-weight: 600; }
 .postcard-tile .pt-meta   { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
@@ -80,29 +90,31 @@
 /* Per-question postcard — used on respond.html */
 .question-postcard {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: var(--s-6);
   position: relative;
 }
 .question-postcard::after {
-  /* stamp in the top-right corner */
+  /* stamp in the top-right corner — forest tint, dashed cream cut */
   content: "";
   position: absolute;
   top: var(--s-3); right: var(--s-3);
   width: 28px; height: 36px;
-  background: var(--accent-2);
+  background: var(--accent-soft);
   border: 1.5px dashed var(--surface);
   border-radius: 2px;
 }
 
-/* Axis-condition glyphs in the report — used on survey.html */
+/* Axis-condition glyphs in the report — used on survey.html.
+   With no peach in the palette, the sun glyph now reads as a warm
+   amber; wind reads as a deeper forest tint distinct from clouds. */
 .axis-glyph {
   width: 22px; height: 22px;
   vertical-align: middle;
   margin-right: var(--s-2);
 }
-.axis-glyph-sun   { color: var(--accent-2); }
+.axis-glyph-sun   { color: var(--warn); }
 .axis-glyph-cloud { color: var(--muted); }
 .axis-glyph-rain  { color: var(--info); }
-.axis-glyph-wind  { color: var(--accent-3); }
+.axis-glyph-wind  { color: var(--accent-deep); }
