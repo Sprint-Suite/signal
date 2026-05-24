@@ -23,6 +23,7 @@ const { createLoginRateLimiter } = require("./lib/loginRateLimiter");
 const { createMailer } = require("./lib/mailer");
 const { getActivityFilePath } = require("./lib/adminActivity");
 const { createHttpApp } = require("./lib/httpApp");
+const { loadTemplatesFromDisk } = require("./lib/templateLoader");
 
 const PORT = Number(process.env.PORT) || 3002;
 const NODE_ENV = process.env.NODE_ENV || "development";
@@ -41,6 +42,7 @@ if (SESSION_SECRET.length < 16) {
 }
 
 const conn = db.initDb(DB_PATH);
+loadTemplatesFromDisk(conn, path.join(__dirname, "templates"));
 
 const app = createHttpApp({
   conn,
