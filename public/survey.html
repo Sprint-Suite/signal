@@ -7,9 +7,11 @@
   <link rel="stylesheet" href="/css/theme-core.css">
   <link rel="stylesheet" href="/css/theme-signal.css">
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/breathing-waves.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/radar.js" defer></script>
   <script src="/js/survey.js" defer></script>
+  <script src="/js/breathing-waves.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -30,7 +32,13 @@
 
     <!-- ============ Builder ============ -->
     <section id="builder" class="hidden">
-      <h1>New survey</h1>
+      <header class="header-band" data-breathing-waves data-wave-palette="signal">
+        <canvas></canvas>
+        <div class="header-content">
+          <p class="eyebrow">Create</p>
+          <h1 class="header-title">New survey</h1>
+        </div>
+      </header>
 
       <p id="builder-no-teams" class="notice notice-info hidden">
         You need a team first. <a href="/admin">Create a team</a>, then come back.
@@ -82,11 +90,14 @@
 
     <!-- ============ Report ============ -->
     <section id="report" class="hidden">
-      <div class="report-head">
-        <p class="kicker">Health check report</p>
-        <h1 id="report-title">Survey</h1>
-        <p id="report-sub" class="muted"></p>
-      </div>
+      <header class="header-band" data-breathing-waves data-wave-palette="signal">
+        <canvas></canvas>
+        <div class="header-content">
+          <p class="eyebrow">Health check report</p>
+          <h1 id="report-title" class="header-title">Survey</h1>
+          <p id="report-sub" class="header-subtitle"></p>
+        </div>
+      </header>
 
       <div class="card" id="report-controls">
         <h3>Survey link</h3>

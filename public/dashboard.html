@@ -7,8 +7,10 @@
   <link rel="stylesheet" href="/css/theme-core.css">
   <link rel="stylesheet" href="/css/theme-signal.css">
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/breathing-waves.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/dashboard.js" defer></script>
+  <script src="/js/breathing-waves.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -21,6 +23,14 @@
       <a class="btn btn-ghost btn-sm" href="/account">Account</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
+  </header>
+
+  <header class="header-band" data-breathing-waves data-wave-palette="signal" role="none">
+    <canvas></canvas>
+    <div class="header-content">
+      <p class="eyebrow">Workspace</p>
+      <h1 class="header-title">Surveys</h1>
+    </div>
   </header>
 
   <main class="page">
@@ -37,8 +47,7 @@
     </div>
 
     <div id="main-content" class="hidden stack">
-      <div class="spread">
-        <h1>Surveys</h1>
+      <div class="row row-end">
         <a class="btn btn-primary" href="/survey">New survey</a>
       </div>
 
