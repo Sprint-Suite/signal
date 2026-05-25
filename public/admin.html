@@ -7,8 +7,10 @@
   <link rel="stylesheet" href="/css/theme-core.css">
   <link rel="stylesheet" href="/css/theme-signal.css">
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/breathing-waves.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/admin.js" defer></script>
+  <script src="/js/breathing-waves.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -23,8 +25,15 @@
     </span>
   </header>
 
+  <header class="header-band" data-breathing-waves data-wave-palette="signal">
+    <canvas></canvas>
+    <div class="header-content">
+      <p class="eyebrow">Workspace</p>
+      <h1 class="header-title">Teams &amp; admins</h1>
+    </div>
+  </header>
+
   <main class="page">
-    <h1>Teams &amp; admins</h1>
 
     <div class="card">
       <h2>Teams</h2>
