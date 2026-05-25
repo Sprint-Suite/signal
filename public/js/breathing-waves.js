@@ -107,7 +107,11 @@
     }
 
     resize();
-    window.addEventListener('resize', resize);
+    if (window.ResizeObserver) {
+      new ResizeObserver(resize).observe(host);
+    } else {
+      window.addEventListener('resize', resize);
+    }
 
     if (reduceMotion) {
       draw();

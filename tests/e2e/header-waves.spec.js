@@ -32,6 +32,15 @@ function attachErrorListeners(page) {
   return errs;
 }
 
+async function assertSizedCanvas(band) {
+  // Canvas.width is set by the component's resize() to host width × devicePixelRatio.
+  // A non-zero value proves the component initialised and the host had real dimensions —
+  // catches the "hidden section returns 0×0 from getBoundingClientRect" regression.
+  await expect
+    .poll(async () => band.locator("canvas").evaluate((c) => c.width))
+    .toBeGreaterThan(0);
+}
+
 test.describe("breathing-waves header band", () => {
   test("renders on public license page with aria-hidden canvas", async ({ page }) => {
     const errs = attachErrorListeners(page);
@@ -41,6 +50,7 @@ test.describe("breathing-waves header band", () => {
       await expect(band).toBeVisible();
       await expect(band.locator("canvas")).toHaveAttribute("aria-hidden", "true");
       await expect(band.locator(".header-title")).toContainText(title);
+      await assertSizedCanvas(band);
     }
     expect(errs).toEqual([]);
   });
@@ -54,6 +64,7 @@ test.describe("breathing-waves header band", () => {
       await expect(band).toBeVisible();
       await expect(band.locator("canvas")).toHaveAttribute("aria-hidden", "true");
       await expect(band.locator(".header-title").first()).toContainText(title);
+      await assertSizedCanvas(band);
     }
     expect(errs).toEqual([]);
   });
