@@ -16,9 +16,10 @@ function weatherGlyphFor(survey) {
 }
 
 (function () {
-  byId("signout-btn").addEventListener("click", async () => {
-    await apiPost("/api/auth/logout");
-    window.location.href = "/";
+  byId("signout-btn").addEventListener("click", () => {
+    // Hub-delegated logout: the auth-client handler revokes the central
+    // session, clears the local cookie, and redirects to the hub.
+    window.location.href = "/auth/logout";
   });
 
   function escapeHtml(str) {
@@ -160,32 +161,8 @@ function weatherGlyphFor(survey) {
     }
   }
 
-  async function loadResend() {
-    const banner = byId("verify-banner");
-    const messageBox = byId("verify-banner-message");
-    byId("resend-btn").addEventListener("click", async () => {
-      hide(messageBox);
-      const res = await apiPost("/api/auth/resend-verification");
-      notice(
-        messageBox,
-        res.ok
-          ? "Verification email sent."
-          : (res.data && res.data.error) || "Could not send the email.",
-        res.ok ? "ok" : "error"
-      );
-    });
-    show(banner);
-  }
-
   async function init() {
-    if (!(await requireSession())) return;
-
     const res = await apiGet("/api/surveys");
-    if (res.status === 403) {
-      await loadResend();
-      return;
-    }
-
     show(byId("main-content"));
     const surveys = (res.data && res.data.surveys) || [];
     const list = byId("survey-list");

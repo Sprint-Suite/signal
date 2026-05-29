@@ -11,6 +11,7 @@
   <script src="/js/api.js" defer></script>
   <script src="/js/dashboard.js" defer></script>
   <script src="/js/breathing-waves.js" defer></script>
+  <script src="/auth-client/heartbeat.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -20,7 +21,6 @@
     </span>
     <span class="topbar-actions">
       <a class="btn btn-ghost btn-sm" href="/admin">Teams &amp; admins</a>
-      <a class="btn btn-ghost btn-sm" href="/account">Account</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
   </header>
@@ -34,18 +34,6 @@
   </header>
 
   <main class="page">
-    <div id="verify-banner" class="card hidden">
-      <h2>Verify your email</h2>
-      <p class="muted">
-        Your account is not yet verified. Check your email for the verification
-        link, or send a new one.
-      </p>
-      <p id="verify-banner-message" class="notice hidden"></p>
-      <button id="resend-btn" class="btn btn-primary" type="button">
-        Resend verification email
-      </button>
-    </div>
-
     <div id="main-content" class="hidden stack">
       <div class="row row-end">
         <a class="btn btn-primary" href="/survey">New survey</a>

@@ -1,9 +1,10 @@
 "use strict";
 
 (function () {
-  byId("signout-btn").addEventListener("click", async () => {
-    await apiPost("/api/auth/logout");
-    window.location.href = "/";
+  byId("signout-btn").addEventListener("click", () => {
+    // Hub-delegated logout: revokes the central session, clears the local
+    // cookie, and redirects to the hub.
+    window.location.href = "/auth/logout";
   });
 
   function revealKey(label, key) {
@@ -113,30 +114,8 @@
     await loadTeams();
   }
 
-  async function invite() {
-    const input = byId("invite-email");
-    hide(byId("invite-message"));
-    const res = await apiPost("/api/auth/invite", { email: input.value.trim() });
-    if (res.ok) {
-      notice(
-        byId("invite-message"),
-        `Invite sent to ${res.data.email}.`,
-        "ok"
-      );
-      input.value = "";
-    } else {
-      notice(
-        byId("invite-message"),
-        (res.data && res.data.error) || "Could not send the invite.",
-        "error"
-      );
-    }
-  }
-
   async function init() {
-    if (!(await requireSession())) return;
     byId("create-team-btn").addEventListener("click", createTeam);
-    byId("invite-btn").addEventListener("click", invite);
     await loadTeams();
   }
 

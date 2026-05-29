@@ -54,6 +54,13 @@ async function apiSend(method, path, body) {
     headers: body ? { "Content-Type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined
   });
+  // Session lost mid-use: the server guard (auth.requireAuth) 302-redirects an
+  // expired/absent session to the hub login, which fetch follows cross-origin.
+  // Reload so the top-level navigation bounces us through the guard properly.
+  if (res.redirected || res.status === 401) {
+    window.location.reload();
+    return { ok: false, status: res.status || 401, data: null };
+  }
   const text = await res.text();
   let data = null;
   try {
@@ -68,14 +75,15 @@ const apiGet = (path) => apiSend("GET", path);
 const apiPost = (path, body) => apiSend("POST", path, body);
 const apiDelete = (path) => apiSend("DELETE", path);
 
-/** Confirm an admin session; redirect to the login page if there is none. */
+/**
+ * Authenticated pages are guarded server-side by the hub (auth.requireAuth):
+ * an absent/expired session never reaches this page — it is 302-bounced to the
+ * hub login before the HTML is served. So by the time page JS runs we are
+ * signed in, and this is a no-op kept for call-site compatibility. Mid-session
+ * expiry is handled by apiSend() (reload on redirect/401) and the heartbeat.
+ */
 async function requireSession() {
-  const res = await apiGet("/api/auth/me");
-  if (res.status === 401) {
-    window.location.href = "/";
-    return null;
-  }
-  return res.data && res.data.user;
+  return true;
 }
 
 /** Render a message into a notice element. kind: error | ok | info. */

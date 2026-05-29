@@ -7,33 +7,45 @@ const { once } = require("node:events");
 const os = require("node:os");
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 
 const db = require("../lib/db");
-const auth = require("../lib/auth");
+const { createAuthClient } = require("@suite/auth-client");
 const { createHttpApp } = require("../lib/httpApp");
-const { createSessionManager } = require("../lib/session");
-const { createLoginRateLimiter } = require("../lib/loginRateLimiter");
 
 const ACTIVITY_FILE = path.join(
   os.tmpdir(),
   `signal-test-activity-${process.pid}.jsonl`
 );
-after(() => fs.rmSync(ACTIVITY_FILE, { force: true }));
+const SESSIONS_DB = path.join(
+  os.tmpdir(),
+  `signal-test-sessions-${process.pid}.db`
+);
+after(() => {
+  fs.rmSync(ACTIVITY_FILE, { force: true });
+  for (const suffix of ["", "-wal", "-shm"]) {
+    fs.rmSync(SESSIONS_DB + suffix, { force: true });
+  }
+});
 
-// A mailer stub — keeps the log transport's output out of the test run.
-const stubMailer = { transport: "stub", sendMail: async () => ({ delivered: false }) };
-
-/** Boot the full app on an ephemeral port over an in-memory database. */
+/**
+ * Boot the full app on an ephemeral port over an in-memory content database.
+ * Authentication is the real @suite/auth-client, pointed at an unreachable
+ * hub: the tests never trigger a hub call because they seed a *fresh* local
+ * session, which requireAuth serves straight from its cache (age < cacheTtl).
+ */
 async function startApp() {
   const conn = db.initDb(":memory:");
+  const auth = createAuthClient({
+    appName: "signal-test",
+    hubBaseUrl: "http://hub.invalid",
+    hubApiKey: "test-key",
+    cookieName: "signal_session",
+    dbPath: SESSIONS_DB
+  });
   const app = createHttpApp({
     conn,
-    sessions: createSessionManager({
-      secret: "test-secret-key-0123456789",
-      secure: false
-    }),
-    rateLimiter: createLoginRateLimiter(),
-    mailer: stubMailer,
+    auth,
     buildInfo: { version: "test", commit: "testsha" },
     publicDir: path.join(os.tmpdir(), "signal-no-public"),
     activityFile: ACTIVITY_FILE,
@@ -43,6 +55,7 @@ async function startApp() {
   await once(server, "listening");
   return {
     conn,
+    auth,
     base: `http://127.0.0.1:${server.address().port}`,
     close: () =>
       new Promise((resolve) => {
@@ -54,9 +67,10 @@ async function startApp() {
   };
 }
 
-async function api(base, method, pathname, { cookie, body } = {}) {
+async function api(base, method, pathname, { cookie, body, redirect } = {}) {
   const res = await fetch(base + pathname, {
     method,
+    redirect: redirect || "follow",
     headers: {
       ...(body ? { "Content-Type": "application/json" } : {}),
       ...(cookie ? { Cookie: cookie } : {})
@@ -73,32 +87,21 @@ async function api(base, method, pathname, { cookie, body } = {}) {
   return { status: res.status, json, text, res };
 }
 
-function sessionCookie(res) {
-  const all = res.headers.getSetCookie
-    ? res.headers.getSetCookie()
-    : [res.headers.get("set-cookie")].filter(Boolean);
-  for (const c of all) {
-    if (c && c.startsWith("signal_session=")) return c.split(";")[0];
-  }
-  return null;
-}
-
-const STRONG_PASSWORD = "a-strong-admin-password";
-
-/** Register a verified admin directly and return a logged-in session cookie. */
-async function loginAsAdmin(app, email = "admin@example.com") {
-  await auth.registerUser(app.conn, {
-    email,
-    password: STRONG_PASSWORD,
-    emailVerified: true
+/**
+ * Seed a fresh hub-backed session directly in the auth-client store and return
+ * the matching cookie. This stands in for the launch flow: requireAuth reads
+ * the cookie, finds the session, and (because it is fresh) admits it without
+ * contacting the hub.
+ */
+function loginAsAdmin(app, userId = "hub-user-test") {
+  const id = crypto.randomBytes(16).toString("hex");
+  app.auth._ctx.store.create({
+    id,
+    userId,
+    centralSessionId: crypto.randomBytes(16).toString("hex"),
+    expiresAt: Date.now() + 60 * 60 * 1000
   });
-  const res = await fetch(`${app.base}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password: STRONG_PASSWORD })
-  });
-  assert.equal(res.status, 200);
-  return sessionCookie(res);
+  return `signal_session=${id}`;
 }
 
 test("/health reports status and build info", async () => {
@@ -114,11 +117,15 @@ test("/health reports status and build info", async () => {
   }
 });
 
-test("admin API needs a session; the public respond API does not", async () => {
+test("admin API bounces to the hub without a session; the public respond API does not", async () => {
   const app = await startApp();
   try {
-    const guarded = await api(app.base, "GET", "/api/surveys");
-    assert.equal(guarded.status, 401);
+    // No cookie: requireAuth 302-redirects to the hub login.
+    const guarded = await api(app.base, "GET", "/api/surveys", {
+      redirect: "manual"
+    });
+    assert.equal(guarded.status, 302);
+    assert.match(guarded.res.headers.get("location"), /hub\.invalid\/login/);
 
     const publicRoute = await api(app.base, "GET", "/api/respond/UNKNOWN");
     assert.equal(publicRoute.status, 404); // reached the handler, not the guard
@@ -127,46 +134,13 @@ test("admin API needs a session; the public respond API does not", async () => {
   }
 });
 
-test("login lifecycle: bad creds, success, session, logout", async () => {
+test("a seeded hub session reaches the admin API", async () => {
   const app = await startApp();
   try {
-    const bad = await api(app.base, "POST", "/api/auth/login", {
-      body: { email: "nobody@example.com", password: "wrong-password-here" }
-    });
-    assert.equal(bad.status, 401);
-
-    const cookie = await loginAsAdmin(app);
-    assert.ok(cookie);
-
-    const me = await api(app.base, "GET", "/api/auth/me", { cookie });
-    assert.equal(me.status, 200);
-    assert.equal(me.json.user.email, "admin@example.com");
-
-    await api(app.base, "POST", "/api/auth/logout", { cookie });
-    const afterLogout = await api(app.base, "GET", "/api/auth/me", { cookie });
-    assert.equal(afterLogout.status, 401);
-  } finally {
-    await app.close();
-  }
-});
-
-test("an unverified admin is blocked from admin routes", async () => {
-  const app = await startApp();
-  try {
-    await auth.registerUser(app.conn, {
-      email: "unverified@example.com",
-      password: STRONG_PASSWORD,
-      emailVerified: false
-    });
-    const login = await api(app.base, "POST", "/api/auth/login", {
-      body: { email: "unverified@example.com", password: STRONG_PASSWORD }
-    });
-    assert.equal(login.status, 200); // login itself succeeds
-    const cookie = sessionCookie(login.res);
-
-    const guarded = await api(app.base, "GET", "/api/surveys", { cookie });
-    assert.equal(guarded.status, 403);
-    assert.equal(guarded.json.needsVerification, true);
+    const cookie = loginAsAdmin(app);
+    const ok = await api(app.base, "GET", "/api/surveys", { cookie });
+    assert.equal(ok.status, 200);
+    assert.ok(Array.isArray(ok.json.surveys));
   } finally {
     await app.close();
   }
@@ -175,7 +149,7 @@ test("an unverified admin is blocked from admin routes", async () => {
 test("full survey lifecycle: team, survey, responses, report, breakdown, CSV", async () => {
   const app = await startApp();
   try {
-    const cookie = await loginAsAdmin(app);
+    const cookie = loginAsAdmin(app);
 
     const templates = await api(app.base, "GET", "/api/templates", { cookie });
     const templateId = templates.json.templates[0].id;
@@ -262,7 +236,7 @@ test("full survey lifecycle: team, survey, responses, report, breakdown, CSV", a
 test("response submission is validated", async () => {
   const app = await startApp();
   try {
-    const cookie = await loginAsAdmin(app);
+    const cookie = loginAsAdmin(app);
     const templateId = (
       await api(app.base, "GET", "/api/templates", { cookie })
     ).json.templates[0].id;
@@ -324,7 +298,7 @@ test("response submission is validated", async () => {
 test("a follow-up survey overlays its baseline on the report", async () => {
   const app = await startApp();
   try {
-    const cookie = await loginAsAdmin(app);
+    const cookie = loginAsAdmin(app);
     const templateId = (
       await api(app.base, "GET", "/api/templates", { cookie })
     ).json.templates[0].id;
@@ -378,59 +352,6 @@ test("a follow-up survey overlays its baseline on the report", async () => {
     assert.ok(report.json.baseline.responseCount >= 3);
     // Every axis carries a baseline mean for the radar overlay.
     assert.ok(report.json.axes.every((a) => a.baselineMean !== null));
-  } finally {
-    await app.close();
-  }
-});
-
-test("a signed-in admin can change their password and login email", async () => {
-  const app = await startApp();
-  try {
-    const cookie = await loginAsAdmin(app, "change@example.com");
-
-    // /me carries the account-detail fields the account page shows.
-    const me = await api(app.base, "GET", "/api/auth/me", { cookie });
-    assert.ok(me.json.user.createdAt);
-
-    // A wrong current password is refused.
-    const bad = await api(app.base, "POST", "/api/auth/change-password", {
-      cookie,
-      body: {
-        currentPassword: "wrong password here",
-        newPassword: "a brand new strong password"
-      }
-    });
-    assert.equal(bad.status, 403);
-
-    // The correct current password changes it.
-    const changed = await api(app.base, "POST", "/api/auth/change-password", {
-      cookie,
-      body: {
-        currentPassword: STRONG_PASSWORD,
-        newPassword: "a brand new strong password"
-      }
-    });
-    assert.equal(changed.status, 200);
-
-    // Change the login email.
-    const emailChanged = await api(app.base, "POST", "/api/auth/change-email", {
-      cookie,
-      body: {
-        currentPassword: "a brand new strong password",
-        newEmail: "moved@example.com"
-      }
-    });
-    assert.equal(emailChanged.status, 200);
-
-    // The new email + new password sign in; the old email no longer does.
-    const fresh = await api(app.base, "POST", "/api/auth/login", {
-      body: { email: "moved@example.com", password: "a brand new strong password" }
-    });
-    assert.equal(fresh.status, 200);
-    const stale = await api(app.base, "POST", "/api/auth/login", {
-      body: { email: "change@example.com", password: "a brand new strong password" }
-    });
-    assert.equal(stale.status, 401);
   } finally {
     await app.close();
   }

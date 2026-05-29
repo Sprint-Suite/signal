@@ -1,14 +1,11 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const credentials = require("./credentials");
+const { authenticate } = require("./_auth");
 
+// Inject the hub-backed session cookie (sign-in is delegated to the hub).
 async function signIn(page) {
-  await page.goto("/");
-  await page.fill("#email", credentials.email);
-  await page.fill("#password", credentials.password);
-  await page.click("#login-btn");
-  await page.waitForURL("**/dashboard");
+  await authenticate(page.context());
 }
 
 test("dashboard groups surveys by team and template; builder optgroups baselines", async ({

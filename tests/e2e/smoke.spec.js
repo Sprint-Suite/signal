@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const credentials = require("./credentials");
+const { authenticate } = require("./_auth");
 
 test("health endpoint reports ok", async ({ request }) => {
   const res = await request.get("/health");
@@ -11,23 +11,10 @@ test("health endpoint reports ok", async ({ request }) => {
   expect(body.schemaVersion).toBe(1);
 });
 
-test("an admin can sign in and reach the dashboard", async ({ page }) => {
-  await page.goto("/");
-  await page.fill("#email", credentials.email);
-  await page.fill("#password", credentials.password);
-  await page.click("#login-btn");
-
-  await page.waitForURL("**/dashboard");
+test("an authenticated session reaches the dashboard", async ({ page, context }) => {
+  await authenticate(context);
+  await page.goto("/dashboard");
   await expect(page.locator("h1")).toHaveText("Surveys");
-});
-
-test("a wrong password is rejected", async ({ page }) => {
-  await page.goto("/");
-  await page.fill("#email", credentials.email);
-  await page.fill("#password", "definitely-not-the-password");
-  await page.click("#login-btn");
-
-  await expect(page.locator("#login-error")).toBeVisible();
 });
 
 test("the respondent form for an unknown code shows a closed message", async ({

@@ -371,9 +371,10 @@ function weatherForScore(score) {
     }
   }
 
-  byId("signout-btn").addEventListener("click", async () => {
-    await apiPost("/api/auth/logout");
-    window.location.href = "/";
+  byId("signout-btn").addEventListener("click", () => {
+    // Hub-delegated logout: revokes the central session, clears the local
+    // cookie, and redirects to the hub.
+    window.location.href = "/auth/logout";
   });
 
   if (surveyId) reportMode(surveyId);

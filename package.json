@@ -14,7 +14,7 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "argon2": "^0.44.0",
+    "@suite/auth-client": "file:../suite/shared/auth-client",
     "better-sqlite3": "^12.10.0",
     "express": "^5.2.1"
   },

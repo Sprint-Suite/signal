@@ -1,7 +1,7 @@
 "use strict";
 
 const { test, expect } = require("@playwright/test");
-const credentials = require("./credentials");
+const { authenticate } = require("./_auth");
 
 const PUBLIC_PAGES = [
   { path: "/license", title: "Signal Free Use License" }
@@ -9,18 +9,14 @@ const PUBLIC_PAGES = [
 
 const AUTH_PAGES = [
   { path: "/dashboard", title: "Surveys" },
-  { path: "/account", title: "Your account" },
   { path: "/admin", title: "Teams & admins" },
   // survey has two .header-band elements; first() targets the builder one
   { path: "/survey", title: "New survey" }
 ];
 
+// Inject the hub-backed session cookie (sign-in is delegated to the hub).
 async function signIn(page) {
-  await page.goto("/");
-  await page.fill("#email", credentials.email);
-  await page.fill("#password", credentials.password);
-  await page.click("#login-btn");
-  await page.waitForURL("**/dashboard");
+  await authenticate(page.context());
 }
 
 function attachErrorListeners(page) {

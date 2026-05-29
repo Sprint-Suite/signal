@@ -11,6 +11,7 @@
   <script src="/js/api.js" defer></script>
   <script src="/js/admin.js" defer></script>
   <script src="/js/breathing-waves.js" defer></script>
+  <script src="/auth-client/heartbeat.js" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -20,7 +21,6 @@
     </span>
     <span class="topbar-actions">
       <a class="btn btn-ghost btn-sm" href="/dashboard">All surveys</a>
-      <a class="btn btn-ghost btn-sm" href="/account">Account</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
   </header>
@@ -53,19 +53,6 @@
       </div>
 
       <div id="team-list"></div>
-    </div>
-
-    <div class="card">
-      <h2>Invite an admin</h2>
-      <p class="faint">
-        The invited person receives a link to set their password. Their account
-        is created ready to use.
-      </p>
-      <div class="row">
-        <input type="email" id="invite-email" placeholder="colleague@example.com" autocomplete="off">
-        <button id="invite-btn" class="btn btn-primary" type="button">Send invite</button>
-      </div>
-      <p id="invite-message" class="notice hidden"></p>
     </div>
   </main>
   <footer class="app-footer"><a href="/license">License</a></footer>

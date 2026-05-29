@@ -4,7 +4,10 @@
  * server.js — composition root.
  *
  * Loads config, opens the database, assembles the app's collaborators, and
- * starts listening. All real logic lives in lib/.
+ * starts listening. Authentication is delegated to the central Sprint Suite
+ * hub via @suite/auth-client: facilitators sign in at the hub and launch
+ * Signal with a one-time launch token. This app no longer owns any
+ * login/session/password code; protected routes use auth.requireAuth.
  */
 
 const fs = require("fs");
@@ -17,10 +20,8 @@ if (fs.existsSync(envPath) && typeof process.loadEnvFile === "function") {
 }
 
 const db = require("./lib/db");
+const { createAuthClient } = require("@suite/auth-client");
 const { getBuildInfo } = require("./lib/buildInfo");
-const { createSessionManager } = require("./lib/session");
-const { createLoginRateLimiter } = require("./lib/loginRateLimiter");
-const { createMailer } = require("./lib/mailer");
 const { getActivityFilePath } = require("./lib/adminActivity");
 const { createHttpApp } = require("./lib/httpApp");
 const { loadTemplatesFromDisk } = require("./lib/templateLoader");
@@ -31,30 +32,24 @@ const HOST =
   process.env.HOST || (NODE_ENV === "production" ? "127.0.0.1" : "0.0.0.0");
 const DB_PATH = path.resolve(__dirname, process.env.DB_PATH || "data/signal.db");
 const APP_BASE_URL = process.env.APP_BASE_URL || `http://localhost:${PORT}`;
-const SESSION_SECRET = process.env.SESSION_SECRET || "";
-
-if (SESSION_SECRET.length < 16) {
-  console.error(
-    "FATAL: SESSION_SECRET must be set to at least 16 characters.\n" +
-      "Generate one with: openssl rand -hex 32"
-  );
-  process.exit(1);
-}
 
 const conn = db.initDb(DB_PATH);
 loadTemplatesFromDisk(conn, path.join(__dirname, "templates"));
 
+// Hub-delegated authentication. createAuthClient throws if HUB_BASE_URL or
+// HUB_API_KEY are missing, so a misconfigured deploy fails fast at boot.
+const auth = createAuthClient({
+  appName: process.env.APP_NAME || "signal",
+  hubBaseUrl: process.env.HUB_BASE_URL,
+  hubApiKey: process.env.HUB_API_KEY,
+  cookieName: "signal_session",
+  cookieDomain: process.env.COOKIE_DOMAIN, // unset in local dev (localhost)
+  dbPath: process.env.APP_SESSIONS_DB || "./data/signal-sessions.db"
+});
+
 const app = createHttpApp({
   conn,
-  sessions: createSessionManager({
-    secret: SESSION_SECRET,
-    secure: NODE_ENV === "production"
-  }),
-  rateLimiter: createLoginRateLimiter({
-    maxFailures: Number(process.env.LOGIN_RATE_LIMIT_MAX) || undefined,
-    windowMs: Number(process.env.LOGIN_RATE_LIMIT_WINDOW_MS) || undefined
-  }),
-  mailer: createMailer(),
+  auth,
   buildInfo: getBuildInfo(__dirname),
   publicDir: path.join(__dirname, "public"),
   activityFile: getActivityFilePath(__dirname),
