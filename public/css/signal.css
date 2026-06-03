@@ -22,8 +22,8 @@
   --radar-guide:var(--line);
   --radar-text:var(--ink);
   --radar-textmuted:var(--soft);
-  --radar-now-fill:var(--greenwash);
-  --radar-baseline-fill:color-mix(in oklab, var(--radar-baseline) 14%, transparent);
+  --radar-now-fill:oklch(0.45 0.077 162 / 0.16);
+  --radar-baseline-fill:oklch(0.62 0.008 250 / 0.14);
 }
 
 /* Utilities not in Instrument */
