@@ -375,3 +375,20 @@ test("two companies can each have a team with the same name", () => {
   assert.equal(db.listTeamsForCompany(conn, "co-b").length, 1);
   conn.close();
 });
+
+test("listSurveysWithCountsForCompany returns only that company's surveys", () => {
+  const conn = freshDb();
+  const template = db.getActiveTemplate(conn);
+  const teamA = db.createTeam(conn, { companyId: "co-a", name: "A-Team", keyHash: "h", keySalt: "s" });
+  const teamB = db.createTeam(conn, { companyId: "co-b", name: "B-Team", keyHash: "h", keySalt: "s" });
+  db.createSurvey(conn, { teamId: teamA.id, templateId: template.id, parentSurveyId: null, accessCode: "AAAAAA1111" });
+  db.createSurvey(conn, { teamId: teamB.id, templateId: template.id, parentSurveyId: null, accessCode: "BBBBBB2222" });
+
+  const aRows = db.listSurveysWithCountsForCompany(conn, "co-a");
+  assert.equal(aRows.length, 1);
+  assert.equal(aRows[0].team_name, "A-Team");
+
+  assert.equal(db.listSurveysWithCountsForCompany(conn, "co-b").length, 1);
+  assert.equal(db.listSurveysWithCountsForCompany(conn, null).length, 0);
+  conn.close();
+});
