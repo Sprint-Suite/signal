@@ -466,3 +466,31 @@ test("creating a survey under another company's team is rejected (400)", async (
     await app.close();
   }
 });
+
+test("creating a follow-up under another company's baseline survey is rejected (400)", async () => {
+  const app = await startApp();
+  try {
+    const cookieA = loginAsAdmin(app, "user-a", { id: "co-a", name: "A" });
+
+    const templateId = (
+      await api(app.base, "GET", "/api/templates", { cookie: cookieA })
+    ).json.templates[0].id;
+
+    const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
+    const baseline = await api(app.base, "POST", "/api/surveys", {
+      cookie: cookieA,
+      body: { teamId: team.json.team.id, templateId }
+    });
+    const surveyId = baseline.json.survey.id;
+
+    const cookieB = loginAsAdmin(app, "user-b", { id: "co-b", name: "B" });
+
+    const attempt = await api(app.base, "POST", "/api/surveys", {
+      cookie: cookieB,
+      body: { parentSurveyId: surveyId }
+    });
+    assert.equal(attempt.status, 400);
+  } finally {
+    await app.close();
+  }
+});
