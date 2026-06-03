@@ -76,3 +76,166 @@
 .ins .modal-content{width:min(420px,100%); background:var(--panel); border:1px solid var(--line2); border-radius:var(--r-xl); box-shadow:var(--shadow-lg); padding:var(--s-6);}
 .ins .modal-content h2{margin:0 0 var(--s-2);}
 .ins .modal-actions{display:flex; justify-content:flex-end; gap:var(--s-2); margin-top:var(--s-6);}
+
+/* ---------------------------------------------------------------------------
+ * Part B — Signal app-specific components (migrated from theme-signal.css,
+ * app.css, and theme-core.css §6 Motion). Selectors scoped to .ins;
+ * tokens re-pointed to Instrument names.
+ * ----------------------------------------------------------------------- */
+
+/* --- Sky hero (theme-signal.css) ---------------------------------------- */
+.ins .sky-hero{background:var(--accent); color:var(--accent-on); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:var(--s-6); position:relative; overflow:hidden;}
+.ins .sky-hero .sky-stars{position:absolute; inset:0; pointer-events:none; background-image:radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1.5px); background-size:80px 90px; background-position:12px 24px; opacity:0.18;}
+.ins .sky-hero .card{background:var(--panel); color:var(--ink); position:relative; z-index:1; width:min(440px,100%);}
+.ins .sky-hero > .brand{color:var(--accent-on);}
+
+/* --- Postcard tile (theme-signal.css) ------------------------------------ */
+.ins .postcard-tile{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s-4); display:grid; grid-template-columns:48px 1fr auto; gap:var(--s-4); align-items:center; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm); transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
+.ins .postcard-tile + .ins .postcard-tile{margin-top:var(--s-2);}
+@media (hover: hover) {
+  .ins .postcard-tile:hover{transform:translateY(-1px); border-color:var(--accent); box-shadow:0 0 0 3px var(--greenwash), var(--shadow-md);}
+}
+.ins .postcard-tile .glyph{width:40px; height:40px; color:var(--accent);}
+.ins .postcard-tile .pt-team{font-weight:600;}
+.ins .postcard-tile .pt-meta{font-size:0.85rem; color:var(--soft); margin-top:2px;}
+
+/* --- Series grouping (theme-signal.css) ---------------------------------- */
+.ins .series-team-name{font-weight:700; font-size:1.1rem; margin:var(--s-4) 0 var(--s-2);}
+.ins .series-template-name{color:var(--soft); font-size:0.95rem; margin:var(--s-3) 0 var(--s-1); padding-left:var(--s-2);}
+.ins .series-followups{margin-left:24px; border-left:2px solid var(--greenwash); padding-left:var(--s-3); margin-top:var(--s-2);}
+.ins .series-followups .postcard-tile{margin-top:var(--s-2);}
+.ins .series-followup-chip{display:inline-block; background:var(--greenwash); color:var(--soft); border-radius:999px; padding:2px 10px; font-size:0.8rem; margin-left:var(--s-2);}
+.ins .series-orphans-label{font-style:italic; color:var(--soft); margin:var(--s-3) 0 var(--s-1); padding-left:var(--s-2);}
+
+/* --- Question postcard (theme-signal.css) -------------------------------- */
+.ins .question-postcard{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-lg); padding:var(--s-6); position:relative;}
+.ins .question-postcard::after{content:""; position:absolute; top:var(--s-3); right:var(--s-3); width:28px; height:36px; background:var(--greenwash); border:1.5px dashed var(--panel); border-radius:2px;}
+
+/* --- Axis-condition glyphs (theme-signal.css) ---------------------------- */
+.ins .axis-glyph{width:22px; height:22px; vertical-align:middle; margin-right:var(--s-2);}
+.ins .axis-glyph-sun{color:var(--warn);}
+.ins .axis-glyph-cloud{color:var(--soft);}
+.ins .axis-glyph-rain{color:var(--info);}
+.ins .axis-glyph-wind{color:var(--accent-deep);}
+
+/* --- Detail list (app.css) ----------------------------------------------- */
+.ins .detail-list{margin:0;}
+.ins .detail-list > div{display:flex; justify-content:space-between; gap:var(--s-4); padding:var(--s-2) 0; border-bottom:1px solid var(--line);}
+.ins .detail-list > div:last-child{border-bottom:none;}
+.ins .detail-list dt{color:var(--soft); font-size:0.9rem;}
+.ins .detail-list dd{margin:0; font-weight:600; text-align:right; word-break:break-all;}
+
+/* --- Admin key reveal (app.css) ------------------------------------------ */
+.ins .key-box{font-family:var(--mono-font); background:var(--bone); border:1px dashed var(--line2); border-radius:var(--r-md); padding:10px 12px; word-break:break-all; font-size:0.9rem;}
+
+/* --- Survey list (app.css) ----------------------------------------------- */
+.ins .survey-row{display:flex; justify-content:space-between; align-items:center; gap:var(--s-4); padding:var(--s-4); border:1px solid var(--line); border-radius:var(--r-md); background:var(--panel); cursor:pointer; text-decoration:none; color:inherit;}
+.ins .survey-row + .ins .survey-row{margin-top:var(--s-2);}
+.ins .survey-row:hover{border-color:var(--line2); background:var(--bone);}
+.ins .survey-row-main{min-width:0;}
+.ins .survey-row-team{font-weight:600;}
+@media (max-width: 599px) {
+  .ins .survey-row{flex-direction:column; align-items:flex-start; gap:var(--s-3);}
+}
+
+/* --- Report (app.css) ---------------------------------------------------- */
+.ins .report-head{margin-bottom:var(--s-6);}
+.ins .report-grid{display:grid; grid-template-columns:1fr; gap:var(--s-4);}
+@media (min-width: 820px) {
+  .ins .report-grid{grid-template-columns:minmax(0, 1.05fr) minmax(0, 1fr);}
+}
+
+/* --- Radar chart (app.css) ----------------------------------------------- */
+.ins .radar-wrap{display:flex; justify-content:center;}
+.ins .radar-wrap svg{width:100%; max-width:440px; height:auto;}
+.ins .legend{display:flex; gap:var(--s-4); justify-content:center; margin-top:var(--s-2);}
+.ins .legend-item{display:flex; align-items:center; gap:6px; font-size:0.82rem;}
+.ins .legend-swatch{width:14px; height:4px; border-radius:2px; display:inline-block;}
+.ins .legend-now{background:var(--radar-now);}
+.ins .legend-baseline{background:var(--radar-baseline);}
+
+/* --- Focus / insight cards (app.css) ------------------------------------- */
+.ins .focus-card{border:1px solid var(--line); border-left:4px solid var(--line2); border-radius:var(--r-md); padding:var(--s-4);}
+.ins .focus-card + .ins .focus-card{margin-top:var(--s-3);}
+.ins .focus-lowFlat{border-left-color:var(--warn);}
+.ins .focus-lowRising{border-left-color:var(--ok);}
+.ins .focus-highSlip{border-left-color:var(--warn);}
+.ins .focus-divided{border-left-color:var(--info);}
+.ins .focus-card-head{display:flex; justify-content:space-between; align-items:baseline; gap:var(--s-2);}
+.ins .focus-axis{font-weight:700;}
+.ins .focus-score{font-family:var(--mono-font); font-weight:700;}
+.ins .focus-tip{font-size:0.9rem; margin:var(--s-2) 0 0;}
+
+/* --- Axis cards (app.css) ------------------------------------------------ */
+.ins .axes-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:var(--s-3);}
+.ins .axis-card{border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s-3);}
+.ins .axis-card-name{font-weight:600; font-size:0.92rem;}
+.ins .axis-card-score{font-family:var(--mono-font); font-size:1.3rem; font-weight:700;}
+.ins .axis-delta{font-size:0.82rem; font-weight:700;}
+.ins .delta-up{color:var(--ok);}
+.ins .delta-down{color:var(--warn);}
+.ins .delta-flat{color:var(--faint);}
+
+/* --- Per-question breakdown (app.css) ------------------------------------ */
+.ins .q-row{display:grid; grid-template-columns:1fr 170px; gap:var(--s-3); align-items:center; padding:var(--s-3) 0; border-bottom:1px solid var(--line);}
+.ins .q-text{font-size:0.9rem;}
+.ins .q-meta{display:flex; gap:var(--s-2); align-items:center; margin-top:2px;}
+.ins .bar{position:relative; flex:1 1 auto; min-width:0; height:8px; background:var(--bone); border-radius:999px; overflow:hidden;}
+.ins .bar-fill{position:absolute; inset:0 auto 0 0; background:var(--accent); border-radius:999px;}
+.ins .q-score{font-family:var(--mono-font); font-weight:700; min-width:30px; text-align:right;}
+.ins .guidance{font-size:0.85rem; color:var(--soft); font-style:italic; border-top:1px solid var(--line); padding-top:var(--s-3);}
+
+/* --- Respondent flow (app.css) ------------------------------------------ */
+.ins .respond-shell{min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:var(--s-6);}
+.ins .respond-card{width:100%; max-width:560px;}
+.ins .progress-track{height:6px; background:var(--bone); border-radius:999px; overflow:hidden; margin-bottom:var(--s-2);}
+.ins .progress-fill{height:100%; background:var(--accent); border-radius:999px;}
+.ins .question-text{font-size:1.2rem; font-weight:600; margin:var(--s-3) 0 var(--s-6);}
+.ins .scale{display:grid; gap:var(--s-2);}
+.ins .scale-option{display:flex; align-items:center; gap:var(--s-3); padding:11px 14px; border:1px solid var(--line2); border-radius:var(--r-md); cursor:pointer;}
+.ins .scale-option:hover{background:var(--bone);}
+.ins .scale-option.selected{border-color:var(--green); background:var(--greenwash);}
+.ins .scale-option input{width:auto;}
+.ins .scale-num{font-family:var(--mono-font); font-weight:700; color:var(--soft);}
+.ins .respond-nav{margin-top:var(--s-6);}
+
+/* --- Footer variants (app.css) ------------------------------------------ */
+.ins .footer-note{margin-top:var(--s-6); font-size:0.8rem; color:var(--faint); text-align:center; max-width:560px;}
+.ins .footer-note-wide{max-width:none;}
+
+/* --- Radio option row (app.css) ----------------------------------------- */
+.ins .radio-option{display:flex; align-items:flex-start; gap:0.625rem; margin-block:var(--s-2); cursor:pointer;}
+.ins .radio-option input[type="radio"]{flex-shrink:0; margin-top:0.2em; width:1.125rem; height:1.125rem;}
+.ins .radio-option > span{line-height:1.45;}
+
+/* --- License text block (app.css) --------------------------------------- */
+.ins .license-text{font-family:var(--mono-font); font-size:0.8rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; background:var(--bone); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s-4); margin:var(--s-4) 0 0;}
+
+/* --- Motion (theme-core.css §6) ----------------------------------------- */
+@keyframes drift-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pin-up {
+  0%   { opacity: 0; transform: scale(0.85) rotate(-4deg); }
+  60%  { opacity: 1; transform: scale(1.05) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes postcard-send {
+  0%   { transform: translateX(0) rotate(0); opacity: 1; }
+  100% { transform: translateX(120%) rotate(-6deg); opacity: 0; }
+}
+@keyframes sticker-place {
+  0%   { transform: scale(0.6) rotate(-12deg); opacity: 0; }
+  70%  { transform: scale(1.08) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+.ins .motion-drift-in{animation:drift-in 240ms ease-out both;}
+.ins .motion-pin-up{animation:pin-up 200ms cubic-bezier(.34,1.56,.64,1) both;}
+.ins .motion-send{animation:postcard-send 280ms ease-in both;}
+.ins .motion-place{animation:sticker-place 240ms cubic-bezier(.34,1.56,.64,1) both;}
+@media (prefers-reduced-motion: reduce) {
+  .ins *, .ins *::before, .ins *::after{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
+  .ins .btn:hover, .ins .btn-primary:hover{transform:none; filter:none;}
+  .ins .card:hover, .ins .postcard-tile:hover{transform:none;}
+}
