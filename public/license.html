@@ -4,27 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>License — Signal</title>
-  <link rel="stylesheet" href="/css/theme-core.css">
-  <link rel="stylesheet" href="/css/theme-signal.css">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/breathing-waves.css">
-  <script src="/js/breathing-waves.js" defer></script>
+  <link rel="stylesheet" href="/css/instrument-core.css">
+  <link rel="stylesheet" href="/css/signal.css">
+  <script type="module" src="/js/oscilloscope.js"></script>
 </head>
-<body>
-  <header class="header-band" data-breathing-waves data-wave-palette="signal">
-    <canvas></canvas>
-    <div class="header-content">
-      <p class="eyebrow">Legal</p>
-      <h1 class="header-title">Signal Free Use License</h1>
-    </div>
-  </header>
-
+<body class="ins" data-app="signal">
+  <div class="band"><div class="waves"></div><div class="band-in">
+    <div class="eyebrow">Legal</div>
+    <h1>Signal Free Use License</h1>
+  </div></div>
   <main class="page page-narrow">
     <div class="card">
-      <p class="brand">
-        <svg class="brand-glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#postcard"/></svg>
-        <span>Signal</span>
-      </p>
+      <p class="brand"><svg class="mk" width="22" height="22" aria-hidden="true"><use href="/illos/glyphs.svg#glyph-signal"/></svg> Signal</p>
       <p>This tool is free to use, but it is not open source.</p>
       <p>You may use the software at no cost, but you may not copy, redistribute, modify, or sell it.</p>
       <p>The software is provided &ldquo;as is&rdquo; and all responsibility for the interpretation and use of the survey results remains with the user. Return to the <a href="/">main app</a>.</p>
