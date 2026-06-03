@@ -34,7 +34,10 @@ for (const base of [DB_PATH, SESSIONS_DB]) {
 // Content database.
 db.initDb(DB_PATH).close();
 
-// Session store: seed one fresh session matching credentials.sessionId.
+// Session store: seed the fresh sessions the specs authenticate as. Each
+// carries a `company` ({ id, name }) which becomes `req.user.company` and lets
+// company-scoped routes (POST /api/teams, …) admit the session. Company A and B
+// are distinct companies used by company-scoping.spec.js to prove isolation.
 const auth = createAuthClient({
   appName: "signal",
   hubBaseUrl: "http://hub.invalid",
@@ -42,11 +45,16 @@ const auth = createAuthClient({
   cookieName: "signal_session",
   dbPath: SESSIONS_DB
 });
-auth._ctx.store.create({
-  id: credentials.sessionId,
-  userId: credentials.userId,
-  centralSessionId: credentials.centralSessionId,
-  expiresAt: Date.now() + 24 * 60 * 60 * 1000
-});
 
-console.log("e2e databases + session seeded.");
+const EXPIRES_AT = Date.now() + 24 * 60 * 60 * 1000;
+for (const cred of [credentials, credentials.companyA, credentials.companyB]) {
+  auth._ctx.store.create({
+    id: cred.sessionId,
+    userId: cred.userId,
+    centralSessionId: cred.centralSessionId,
+    expiresAt: EXPIRES_AT,
+    company: cred.company
+  });
+}
+
+console.log("e2e databases + sessions seeded.");
