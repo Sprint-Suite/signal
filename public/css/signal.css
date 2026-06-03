@@ -91,7 +91,7 @@
 
 /* --- Postcard tile (theme-signal.css) ------------------------------------ */
 .ins .postcard-tile{background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s-4); display:grid; grid-template-columns:48px 1fr auto; gap:var(--s-4); align-items:center; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm); transition:transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;}
-.ins .postcard-tile + .ins .postcard-tile{margin-top:var(--s-2);}
+.ins .postcard-tile + .postcard-tile{margin-top:var(--s-2);}
 @media (hover: hover) {
   .ins .postcard-tile:hover{transform:translateY(-1px); border-color:var(--accent); box-shadow:0 0 0 3px var(--greenwash), var(--shadow-md);}
 }
@@ -130,7 +130,7 @@
 
 /* --- Survey list (app.css) ----------------------------------------------- */
 .ins .survey-row{display:flex; justify-content:space-between; align-items:center; gap:var(--s-4); padding:var(--s-4); border:1px solid var(--line); border-radius:var(--r-md); background:var(--panel); cursor:pointer; text-decoration:none; color:inherit;}
-.ins .survey-row + .ins .survey-row{margin-top:var(--s-2);}
+.ins .survey-row + .survey-row{margin-top:var(--s-2);}
 .ins .survey-row:hover{border-color:var(--line2); background:var(--bone);}
 .ins .survey-row-main{min-width:0;}
 .ins .survey-row-team{font-weight:600;}
@@ -156,7 +156,7 @@
 
 /* --- Focus / insight cards (app.css) ------------------------------------- */
 .ins .focus-card{border:1px solid var(--line); border-left:4px solid var(--line2); border-radius:var(--r-md); padding:var(--s-4);}
-.ins .focus-card + .ins .focus-card{margin-top:var(--s-3);}
+.ins .focus-card + .focus-card{margin-top:var(--s-3);}
 .ins .focus-lowFlat{border-left-color:var(--warn);}
 .ins .focus-lowRising{border-left-color:var(--ok);}
 .ins .focus-highSlip{border-left-color:var(--warn);}
