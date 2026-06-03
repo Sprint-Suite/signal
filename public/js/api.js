@@ -117,7 +117,7 @@ function confirmModal(options) {
   return new Promise((resolve) => {
     const titleId = `modal-title-${Date.now()}`;
     const cancelBtn = el("button", {
-      class: "btn",
+      class: "btn btn-ghost",
       type: "button",
       text: opts.cancelLabel || "Cancel"
     });
