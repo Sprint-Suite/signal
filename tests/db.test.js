@@ -38,6 +38,7 @@ test("listSurveysWithCounts exposes template version", () => {
   // Set up a team and a survey under the seeded template.
   const template = db.getActiveTemplate(conn);
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Team Version",
     keyHash: "h",
     keySalt: "s",
@@ -131,18 +132,26 @@ test("auth tokens: created, looked up by hash, single-use, invalidated in bulk",
   conn.close();
 });
 
-test("createTeam stores a team; duplicate name is rejected", () => {
+test("createTeam stores a team; duplicate name within a company is rejected", () => {
   const conn = freshDb();
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Falcons",
-    keyHash: "kh",
-    keySalt: "ks"
+    keyHash: "h",
+    keySalt: "s"
   });
   assert.ok(team.id);
+  assert.equal(team.company_id, "co-a");
   assert.equal(db.getTeamByName(conn, "falcons").id, team.id);
 
   assert.throws(
-    () => db.createTeam(conn, { name: "Falcons", keyHash: "x", keySalt: "y" }),
+    () =>
+      db.createTeam(conn, {
+        companyId: "co-a",
+        name: "Falcons",
+        keyHash: "x",
+        keySalt: "y"
+      }),
     /already exists/
   );
   conn.close();
@@ -152,6 +161,7 @@ test("a survey can be created, found by access code, and closed", () => {
   const conn = freshDb();
   const template = db.getActiveTemplate(conn);
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Falcons",
     keyHash: "kh",
     keySalt: "ks"
@@ -185,6 +195,7 @@ test("submitResponse persists a response and its answers atomically", () => {
   const conn = freshDb();
   const template = db.getActiveTemplate(conn);
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Falcons",
     keyHash: "kh",
     keySalt: "ks"
@@ -222,6 +233,7 @@ test("getScoringInputForSurvey returns rows ready for the scoring engine", () =>
   const conn = freshDb();
   const template = db.getActiveTemplate(conn);
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Falcons",
     keyHash: "kh",
     keySalt: "ks"
@@ -253,6 +265,7 @@ test("listSurveysWithCounts joins team/template names and response counts", () =
   const conn = freshDb();
   const template = db.getActiveTemplate(conn);
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Falcons",
     keyHash: "kh",
     keySalt: "ks"
@@ -283,6 +296,7 @@ test("deleting a survey cascades to its responses and answers", () => {
   const conn = freshDb();
   const template = db.getActiveTemplate(conn);
   const team = db.createTeam(conn, {
+    companyId: "co-a",
     name: "Falcons",
     keyHash: "kh",
     keySalt: "ks"
@@ -335,5 +349,29 @@ test("migrateToV2 is idempotent on an already-v2 database", () => {
   const conn = freshDb(); // already at v2
   db.ensureSchema(conn);  // re-run: must not throw or change version
   assert.equal(db.getSchemaVersion(conn), 2);
+  conn.close();
+});
+
+test("listTeamsForCompany returns only that company's teams", () => {
+  const conn = freshDb();
+  db.createTeam(conn, { companyId: "co-a", name: "Alpha", keyHash: "h", keySalt: "s" });
+  db.createTeam(conn, { companyId: "co-a", name: "Beta", keyHash: "h", keySalt: "s" });
+  db.createTeam(conn, { companyId: "co-b", name: "Gamma", keyHash: "h", keySalt: "s" });
+
+  const aTeams = db.listTeamsForCompany(conn, "co-a");
+  assert.deepEqual(aTeams.map((t) => t.name).sort(), ["Alpha", "Beta"]);
+
+  const bTeams = db.listTeamsForCompany(conn, "co-b");
+  assert.deepEqual(bTeams.map((t) => t.name), ["Gamma"]);
+  conn.close();
+});
+
+test("two companies can each have a team with the same name", () => {
+  const conn = freshDb();
+  const a = db.createTeam(conn, { companyId: "co-a", name: "Platform", keyHash: "h", keySalt: "s" });
+  const b = db.createTeam(conn, { companyId: "co-b", name: "Platform", keyHash: "h", keySalt: "s" });
+  assert.notEqual(a.id, b.id);
+  assert.equal(db.listTeamsForCompany(conn, "co-a").length, 1);
+  assert.equal(db.listTeamsForCompany(conn, "co-b").length, 1);
   conn.close();
 });
