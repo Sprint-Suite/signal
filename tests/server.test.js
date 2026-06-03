@@ -93,13 +93,18 @@ async function api(base, method, pathname, { cookie, body, redirect } = {}) {
  * the cookie, finds the session, and (because it is fresh) admits it without
  * contacting the hub.
  */
-function loginAsAdmin(app, userId = "hub-user-test") {
+function loginAsAdmin(
+  app,
+  userId = "hub-user-test",
+  company = { id: "co-test", name: "Test Co" }
+) {
   const id = crypto.randomBytes(16).toString("hex");
   app.auth._ctx.store.create({
     id,
     userId,
     centralSessionId: crypto.randomBytes(16).toString("hex"),
-    expiresAt: Date.now() + 60 * 60 * 1000
+    expiresAt: Date.now() + 60 * 60 * 1000,
+    company
   });
   return `signal_session=${id}`;
 }
@@ -110,7 +115,7 @@ test("/health reports status and build info", async () => {
     const { status, json } = await api(app.base, "GET", "/health");
     assert.equal(status, 200);
     assert.equal(json.status, "ok");
-    assert.equal(json.schemaVersion, 1);
+    assert.equal(json.schemaVersion, 2);
     assert.equal(json.version, "test");
   } finally {
     await app.close();
@@ -352,6 +357,60 @@ test("a follow-up survey overlays its baseline on the report", async () => {
     assert.ok(report.json.baseline.responseCount >= 3);
     // Every axis carries a baseline mean for the radar overlay.
     assert.ok(report.json.axes.every((a) => a.baselineMean !== null));
+  } finally {
+    await app.close();
+  }
+});
+
+test("a facilitator sees only their own company's teams", async () => {
+  const app = await startApp();
+  try {
+    const cookieA = loginAsAdmin(app, "user-a", { id: "co-a", name: "A" });
+    const cookieB = loginAsAdmin(app, "user-b", { id: "co-b", name: "B" });
+
+    await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
+    await api(app.base, "POST", "/api/teams", { cookie: cookieB, body: { name: "Bravo" } });
+
+    const aList = await api(app.base, "GET", "/api/teams", { cookie: cookieA });
+    assert.equal(aList.status, 200);
+    assert.deepEqual(aList.json.teams.map((t) => t.name), ["Alpha"]);
+
+    const bList = await api(app.base, "GET", "/api/teams", { cookie: cookieB });
+    assert.deepEqual(bList.json.teams.map((t) => t.name), ["Bravo"]);
+  } finally {
+    await app.close();
+  }
+});
+
+test("a company cannot rotate-key or delete another company's team (404)", async () => {
+  const app = await startApp();
+  try {
+    const cookieA = loginAsAdmin(app, "user-a", { id: "co-a", name: "A" });
+    const cookieB = loginAsAdmin(app, "user-b", { id: "co-b", name: "B" });
+
+    const created = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
+    const teamId = created.json.team.id;
+
+    const rotate = await api(app.base, "POST", `/api/teams/${teamId}/rotate-key`, { cookie: cookieB });
+    assert.equal(rotate.status, 404);
+
+    const del = await api(app.base, "DELETE", `/api/teams/${teamId}`, { cookie: cookieB });
+    assert.equal(del.status, 404);
+  } finally {
+    await app.close();
+  }
+});
+
+test("a company-less session sees no teams and cannot create one", async () => {
+  const app = await startApp();
+  try {
+    const cookie = loginAsAdmin(app, "user-x", null);
+    const list = await api(app.base, "GET", "/api/teams", { cookie });
+    assert.equal(list.status, 200);
+    assert.deepEqual(list.json.teams, []);
+
+    const create = await api(app.base, "POST", "/api/teams", { cookie, body: { name: "Nope" } });
+    assert.equal(create.status, 403);
   } finally {
     await app.close();
   }
