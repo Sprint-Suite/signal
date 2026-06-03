@@ -236,6 +236,6 @@
 .ins .motion-place{animation:sticker-place 240ms cubic-bezier(.34,1.56,.64,1) both;}
 @media (prefers-reduced-motion: reduce) {
   .ins *, .ins *::before, .ins *::after{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
-  .ins .btn:hover, .ins .btn-primary:hover{transform:none; filter:none;}
+  .ins .btn:hover, .ins .btn-pri:hover{transform:none; filter:none;}
   .ins .card:hover, .ins .postcard-tile:hover{transform:none;}
 }
