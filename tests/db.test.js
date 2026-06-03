@@ -10,9 +10,9 @@ function freshDb() {
   return db.initDb(":memory:");
 }
 
-test("a fresh database is at schema version 1", () => {
+test("a fresh database is at schema version 2", () => {
   const conn = freshDb();
-  assert.equal(db.getSchemaVersion(conn), 1);
+  assert.equal(db.getSchemaVersion(conn), 2);
   conn.close();
 });
 
@@ -306,5 +306,34 @@ test("deleting a survey cascades to its responses and answers", () => {
     conn.prepare("SELECT COUNT(*) AS n FROM answers").get().n,
     0
   );
+  conn.close();
+});
+
+test("migrateToV2 wipes tenant tables, keeps the question bank, adds company_id", () => {
+  const conn = db.openDatabase(":memory:");
+  conn.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+  const dbModule = require("../lib/db");
+  dbModule.ensureSchema(conn);
+  dbModule.seedQuestionBank(conn);
+
+  // Question bank survived the v2 migration.
+  assert.equal(dbModule.listTemplates(conn).length, 1);
+  const template = dbModule.getActiveTemplate(conn);
+  assert.equal(dbModule.getQuestionsForTemplate(conn, template.id).length, 24);
+
+  // teams now has a company_id column.
+  const teamCols = conn.prepare("PRAGMA table_info(teams)").all().map((c) => c.name);
+  assert.ok(teamCols.includes("company_id"), "teams.company_id exists");
+
+  // Tenant tables are empty (clean-cut wipe).
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM teams").get().n, 0);
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM surveys").get().n, 0);
+  conn.close();
+});
+
+test("migrateToV2 is idempotent on an already-v2 database", () => {
+  const conn = freshDb(); // already at v2
+  db.ensureSchema(conn);  // re-run: must not throw or change version
+  assert.equal(db.getSchemaVersion(conn), 2);
   conn.close();
 });
