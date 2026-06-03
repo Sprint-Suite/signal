@@ -345,6 +345,162 @@ test("migrateToV2 wipes tenant tables, keeps the question bank, adds company_id"
   conn.close();
 });
 
+test("migrateToV2 cleanly upgrades a populated v1 database (FK-safe wipe)", () => {
+  // Build a REAL v1 database by replaying the exact v1 DDL (copied from
+  // migrateToV1) and stamping schema_version=1, since migrateToV1 isn't
+  // exported. openDatabase enforces foreign_keys = ON, so the v2 DROPs run
+  // against the same FK pressure a prod restart would face.
+  const conn = db.openDatabase(":memory:");
+  conn.exec(
+    "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+  );
+  conn.exec(`
+    CREATE TABLE users (
+      id                TEXT PRIMARY KEY,
+      email             TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      password_hash     TEXT NOT NULL,
+      email_verified    INTEGER NOT NULL DEFAULT 0,
+      is_active         INTEGER NOT NULL DEFAULT 1,
+      failed_attempts   INTEGER NOT NULL DEFAULT 0,
+      locked_until      TEXT,
+      created_at        TEXT NOT NULL,
+      last_login_at     TEXT
+    );
+    CREATE TABLE auth_tokens (
+      id           TEXT PRIMARY KEY,
+      user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind         TEXT NOT NULL,
+      token_hash   TEXT NOT NULL,
+      expires_at   TEXT NOT NULL,
+      used_at      TEXT,
+      created_at   TEXT NOT NULL
+    );
+    CREATE TABLE teams (
+      id          TEXT PRIMARY KEY,
+      name        TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      key_hash    TEXT NOT NULL,
+      key_salt    TEXT NOT NULL,
+      weak        INTEGER NOT NULL DEFAULT 0,
+      created_at  TEXT NOT NULL
+    );
+    CREATE TABLE templates (
+      id          TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      version     INTEGER NOT NULL DEFAULT 1,
+      is_active   INTEGER NOT NULL DEFAULT 1,
+      created_at  TEXT NOT NULL
+    );
+    CREATE TABLE axes (
+      id            TEXT PRIMARY KEY,
+      template_id   TEXT NOT NULL REFERENCES templates(id) ON DELETE CASCADE,
+      name          TEXT NOT NULL,
+      description   TEXT,
+      display_order INTEGER NOT NULL
+    );
+    CREATE TABLE questions (
+      id                TEXT PRIMARY KEY,
+      template_id       TEXT NOT NULL REFERENCES templates(id) ON DELETE CASCADE,
+      axis_id           TEXT NOT NULL REFERENCES axes(id) ON DELETE CASCADE,
+      text              TEXT NOT NULL,
+      is_reverse_scored INTEGER NOT NULL DEFAULT 0,
+      display_order     INTEGER NOT NULL
+    );
+    CREATE TABLE surveys (
+      id                TEXT PRIMARY KEY,
+      team_id           TEXT NOT NULL REFERENCES teams(id),
+      template_id       TEXT NOT NULL REFERENCES templates(id),
+      parent_survey_id  TEXT REFERENCES surveys(id),
+      access_code       TEXT NOT NULL UNIQUE,
+      status            TEXT NOT NULL DEFAULT 'open',
+      opened_at         TEXT NOT NULL,
+      closed_at         TEXT
+    );
+    CREATE TABLE responses (
+      id               TEXT PRIMARY KEY,
+      survey_id        TEXT NOT NULL REFERENCES surveys(id) ON DELETE CASCADE,
+      duration_seconds INTEGER,
+      flagged_quality  INTEGER NOT NULL DEFAULT 0,
+      submitted_at     TEXT NOT NULL
+    );
+    CREATE TABLE answers (
+      id           TEXT PRIMARY KEY,
+      response_id  TEXT NOT NULL REFERENCES responses(id) ON DELETE CASCADE,
+      question_id  TEXT NOT NULL REFERENCES questions(id),
+      score        INTEGER NOT NULL
+    );
+  `);
+  conn
+    .prepare("INSERT INTO meta (key, value) VALUES ('schema_version', '1')")
+    .run();
+  assert.equal(db.getSchemaVersion(conn), 1);
+
+  // Populate the question bank (must survive) and the tenant chain
+  // template -> axis -> question, team -> survey -> response -> answer
+  // (must be wiped) using raw SQL matching the v1 schema.
+  conn
+    .prepare(
+      "INSERT INTO templates (id, name, version, is_active, created_at) VALUES (?, ?, 1, 1, ?)"
+    )
+    .run("tpl-1", "Agile Health Check", "2026-01-01T00:00:00.000Z");
+  conn
+    .prepare(
+      "INSERT INTO axes (id, template_id, name, description, display_order) VALUES (?, ?, ?, ?, ?)"
+    )
+    .run("axis-1", "tpl-1", "Delivery", "desc", 0);
+  conn
+    .prepare(
+      "INSERT INTO questions (id, template_id, axis_id, text, is_reverse_scored, display_order) VALUES (?, ?, ?, ?, 0, 0)"
+    )
+    .run("q-1", "tpl-1", "axis-1", "We ship reliably.");
+  conn
+    .prepare(
+      "INSERT INTO teams (id, name, key_hash, key_salt, weak, created_at) VALUES (?, ?, ?, ?, 0, ?)"
+    )
+    .run("team-1", "Legacy Team", "kh", "ks", "2026-01-01T00:00:00.000Z");
+  conn
+    .prepare(
+      "INSERT INTO surveys (id, team_id, template_id, parent_survey_id, access_code, status, opened_at, closed_at) VALUES (?, ?, ?, NULL, ?, 'open', ?, NULL)"
+    )
+    .run("survey-1", "team-1", "tpl-1", "CODE0001", "2026-01-01T00:00:00.000Z");
+  conn
+    .prepare(
+      "INSERT INTO responses (id, survey_id, duration_seconds, flagged_quality, submitted_at) VALUES (?, ?, 120, 0, ?)"
+    )
+    .run("resp-1", "survey-1", "2026-01-01T00:00:00.000Z");
+  conn
+    .prepare(
+      "INSERT INTO answers (id, response_id, question_id, score) VALUES (?, ?, ?, 4)"
+    )
+    .run("ans-1", "resp-1", "q-1");
+
+  // Run the migration: current=1, so only migrateToV2 fires.
+  db.ensureSchema(conn);
+
+  // 1. Schema is now at v2.
+  assert.equal(db.getSchemaVersion(conn), 2);
+
+  // 2. Tenant tables wiped clean.
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM teams").get().n, 0);
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM surveys").get().n, 0);
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM responses").get().n, 0);
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM answers").get().n, 0);
+
+  // 3. Question bank preserved.
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM templates").get().n, 1);
+  assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM questions").get().n, 1);
+
+  // 4. teams gained the company_id column.
+  const teamCols = conn
+    .prepare("PRAGMA table_info(teams)")
+    .all()
+    .map((c) => c.name);
+  assert.ok(teamCols.includes("company_id"), "teams.company_id exists");
+
+  // 5. No dangling foreign keys after the wipe.
+  assert.deepEqual(conn.prepare("PRAGMA foreign_key_check").all(), []);
+  conn.close();
+});
+
 test("migrateToV2 is idempotent on an already-v2 database", () => {
   const conn = freshDb(); // already at v2
   db.ensureSchema(conn);  // re-run: must not throw or change version
