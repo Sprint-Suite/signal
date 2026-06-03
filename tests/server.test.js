@@ -415,3 +415,54 @@ test("a company-less session sees no teams and cannot create one", async () => {
     await app.close();
   }
 });
+
+test("a company cannot read or transition another company's survey (404)", async () => {
+  const app = await startApp();
+  try {
+    const cookieA = loginAsAdmin(app, "user-a", { id: "co-a", name: "A" });
+    const cookieB = loginAsAdmin(app, "user-b", { id: "co-b", name: "B" });
+
+    const templateId = (
+      await api(app.base, "GET", "/api/templates", { cookie: cookieA })
+    ).json.templates[0].id;
+
+    const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
+    const created = await api(app.base, "POST", "/api/surveys", {
+      cookie: cookieA,
+      body: { teamId: team.json.team.id, templateId }
+    });
+    const surveyId = created.json.survey.id;
+
+    const bList = await api(app.base, "GET", "/api/surveys", { cookie: cookieB });
+    assert.deepEqual(bList.json.surveys, []);
+
+    const bRead = await api(app.base, "GET", `/api/surveys/${surveyId}`, { cookie: cookieB });
+    assert.equal(bRead.status, 404);
+
+    const bClose = await api(app.base, "POST", `/api/surveys/${surveyId}/close`, { cookie: cookieB });
+    assert.equal(bClose.status, 404);
+  } finally {
+    await app.close();
+  }
+});
+
+test("creating a survey under another company's team is rejected (400)", async () => {
+  const app = await startApp();
+  try {
+    const cookieA = loginAsAdmin(app, "user-a", { id: "co-a", name: "A" });
+    const cookieB = loginAsAdmin(app, "user-b", { id: "co-b", name: "B" });
+
+    const templateId = (
+      await api(app.base, "GET", "/api/templates", { cookie: cookieA })
+    ).json.templates[0].id;
+
+    const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
+    const attempt = await api(app.base, "POST", "/api/surveys", {
+      cookie: cookieB,
+      body: { teamId: team.json.team.id, templateId }
+    });
+    assert.equal(attempt.status, 400);
+  } finally {
+    await app.close();
+  }
+});
