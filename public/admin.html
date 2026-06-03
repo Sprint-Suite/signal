@@ -4,54 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Teams &amp; admins — Signal</title>
-  <link rel="stylesheet" href="/css/theme-core.css">
-  <link rel="stylesheet" href="/css/theme-signal.css">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/breathing-waves.css">
+  <link rel="stylesheet" href="/css/instrument-core.css">
+  <link rel="stylesheet" href="/css/signal.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/admin.js" defer></script>
-  <script src="/js/breathing-waves.js" defer></script>
+  <script type="module" src="/js/oscilloscope.js"></script>
   <script src="/auth-client/heartbeat.js" defer></script>
 </head>
-<body>
+<body class="ins" data-app="signal">
   <header class="topbar">
-    <span class="brand">
-      <svg class="brand-glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#postcard"/></svg>
-      <span>Signal</span>
-    </span>
+    <a href="/" class="brand"><svg class="mk" width="22" height="22" aria-hidden="true"><use href="/illos/glyphs.svg#glyph-signal"/></svg> Signal</a>
     <span class="topbar-actions">
       <a class="btn btn-ghost btn-sm" href="/dashboard">All surveys</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
   </header>
-
-  <header class="header-band" data-breathing-waves data-wave-palette="signal" role="none">
-    <canvas></canvas>
-    <div class="header-content">
-      <p class="eyebrow">Workspace</p>
-      <h1 class="header-title">Teams &amp; admins</h1>
-    </div>
-  </header>
-
+  <div class="band"><div class="waves"></div><div class="band-in">
+    <div class="eyebrow">Workspace</div>
+    <h1>Teams &amp; admins</h1>
+  </div></div>
   <main class="page">
-
     <div class="card">
       <h2>Teams</h2>
       <p class="faint">
         A team is who a survey is for. Its access key is shown once on creation
         or rotation — copy it then.
       </p>
-
       <div class="row">
         <input type="text" id="team-name" placeholder="New team name" autocomplete="off">
-        <button id="create-team-btn" class="btn btn-primary" type="button">Create team</button>
+        <button id="create-team-btn" class="btn btn-pri" type="button">Create team</button>
       </div>
       <p id="team-message" class="notice hidden"></p>
       <div id="key-reveal" class="hidden">
         <p class="faint" id="key-reveal-label"></p>
         <p id="key-reveal-value" class="key-box"></p>
       </div>
-
       <div id="team-list"></div>
     </div>
   </main>

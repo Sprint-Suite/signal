@@ -122,7 +122,7 @@ function confirmModal(options) {
       text: opts.cancelLabel || "Cancel"
     });
     const confirmBtn = el("button", {
-      class: `btn ${opts.danger === false ? "btn-primary" : "btn-danger"}`,
+      class: `btn ${opts.danger === false ? "btn-pri" : "btn-danger"}`,
       type: "button",
       text: opts.confirmLabel || "Confirm"
     });

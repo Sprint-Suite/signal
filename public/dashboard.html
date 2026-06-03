@@ -4,46 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Surveys — Signal</title>
-  <link rel="stylesheet" href="/css/theme-core.css">
-  <link rel="stylesheet" href="/css/theme-signal.css">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/breathing-waves.css">
+  <link rel="stylesheet" href="/css/instrument-core.css">
+  <link rel="stylesheet" href="/css/signal.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/dashboard.js" defer></script>
-  <script src="/js/breathing-waves.js" defer></script>
+  <script type="module" src="/js/oscilloscope.js"></script>
   <script src="/auth-client/heartbeat.js" defer></script>
 </head>
-<body>
+<body class="ins" data-app="signal">
   <header class="topbar">
-    <span class="brand">
-      <svg class="brand-glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#postcard"/></svg>
-      <span>Signal</span>
-    </span>
+    <a href="/" class="brand"><svg class="mk" width="22" height="22" aria-hidden="true"><use href="/illos/glyphs.svg#glyph-signal"/></svg> Signal</a>
     <span class="topbar-actions">
       <a class="btn btn-ghost btn-sm" href="/admin">Teams &amp; admins</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
   </header>
-
-  <header class="header-band" data-breathing-waves data-wave-palette="signal" role="none">
-    <canvas></canvas>
-    <div class="header-content">
-      <p class="eyebrow">Workspace</p>
-      <h1 class="header-title">Surveys</h1>
-    </div>
-  </header>
-
+  <div class="band"><div class="waves"></div><div class="band-in">
+    <div class="eyebrow">Workspace</div>
+    <h1>Surveys</h1>
+  </div></div>
   <main class="page">
     <div id="main-content" class="hidden stack">
       <div class="row row-end">
-        <a class="btn btn-primary" href="/survey">New survey</a>
+        <a class="btn btn-pri" href="/survey">New survey</a>
       </div>
-
       <div id="survey-list"></div>
       <p id="empty-state" class="card muted hidden">
         No surveys yet. Create one to share an anonymous health check with a team.
       </p>
-
       <p class="footer-note footer-note-wide">
         Counts show participation only — never who answered. A report stays
         hidden until a survey has at least 3 responses.

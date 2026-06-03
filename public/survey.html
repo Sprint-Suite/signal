@@ -4,46 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Survey — Signal</title>
-  <link rel="stylesheet" href="/css/theme-core.css">
-  <link rel="stylesheet" href="/css/theme-signal.css">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/breathing-waves.css">
+  <link rel="stylesheet" href="/css/instrument-core.css">
+  <link rel="stylesheet" href="/css/signal.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/radar.js" defer></script>
   <script src="/js/survey.js" defer></script>
-  <script src="/js/breathing-waves.js" defer></script>
+  <script type="module" src="/js/oscilloscope.js"></script>
   <script src="/auth-client/heartbeat.js" defer></script>
 </head>
-<body>
+<body class="ins" data-app="signal">
   <header class="topbar">
-    <span class="brand">
-      <svg class="brand-glyph" aria-hidden="true"><use href="/illos/theme-illos.svg#postcard"/></svg>
-      <span>Signal</span>
-    </span>
+    <a href="/" class="brand"><svg class="mk" width="22" height="22" aria-hidden="true"><use href="/illos/glyphs.svg#glyph-signal"/></svg> Signal</a>
     <span class="topbar-actions">
       <a class="btn btn-ghost btn-sm" href="/dashboard">All surveys</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
   </header>
-
   <main class="page">
     <p id="loading" class="muted">Loading…</p>
     <p id="page-error" class="notice notice-error hidden"></p>
 
-    <!-- ============ Builder ============ -->
     <section id="builder" class="hidden">
-      <header class="header-band" data-breathing-waves data-wave-palette="signal">
-        <canvas></canvas>
-        <div class="header-content">
-          <p class="eyebrow">Create</p>
-          <h1 class="header-title">New survey</h1>
-        </div>
-      </header>
-
+      <div class="band"><div class="waves"></div><div class="band-in">
+        <div class="eyebrow">Create</div>
+        <h1>New survey</h1>
+      </div></div>
       <p id="builder-no-teams" class="notice notice-info hidden">
         You need a team first. <a href="/admin">Create a team</a>, then come back.
       </p>
-
       <div id="builder-form" class="card hidden">
         <label class="field" for="team-select">
           <span>Team</span>
@@ -53,7 +41,6 @@
           <span>Question template</span>
           <select id="template-select"></select>
         </label>
-
         <div class="field">
           <span>Run type</span>
           <label class="radio-option">
@@ -65,40 +52,32 @@
             <span>Follow-up — compared against an earlier run</span>
           </label>
         </div>
-
         <label class="field hidden" id="baseline-field" for="baseline-select">
           <span>Baseline survey to compare against</span>
           <select id="baseline-select"></select>
         </label>
-
         <p id="builder-error" class="notice notice-error hidden"></p>
-        <button id="create-btn" class="btn btn-primary" type="button">
+        <button id="create-btn" class="btn btn-pri" type="button">
           Create &amp; generate link
         </button>
       </div>
-
       <div id="builder-result" class="card hidden">
         <h2>Survey created</h2>
         <p class="muted">Share this anonymous link with the team:</p>
         <p id="result-link" class="key-box"></p>
         <div class="row">
           <button id="copy-result" class="btn btn-sm" type="button">Copy link</button>
-          <a class="btn btn-sm btn-primary" href="/dashboard">Done</a>
+          <a class="btn btn-sm btn-pri" href="/dashboard">Done</a>
         </div>
       </div>
     </section>
 
-    <!-- ============ Report ============ -->
     <section id="report" class="hidden">
-      <header class="header-band" data-breathing-waves data-wave-palette="signal">
-        <canvas></canvas>
-        <div class="header-content">
-          <p class="eyebrow">Health check report</p>
-          <h1 id="report-title" class="header-title">Survey</h1>
-          <p id="report-sub" class="header-subtitle"></p>
-        </div>
-      </header>
-
+      <div class="band"><div class="waves"></div><div class="band-in">
+        <div class="eyebrow">Health check report</div>
+        <h1 id="report-title">Survey</h1>
+        <p id="report-sub" class="sub"></p>
+      </div></div>
       <div class="card" id="report-controls">
         <h3>Survey link</h3>
         <p id="share-link" class="key-box"></p>
@@ -110,9 +89,7 @@
         </div>
         <p id="control-message" class="notice hidden"></p>
       </div>
-
       <p id="report-locked" class="notice notice-info hidden"></p>
-
       <div id="report-body" class="hidden">
         <div class="report-grid">
           <div class="card">
@@ -133,18 +110,15 @@
             <div id="focus"></div>
           </div>
         </div>
-
         <div class="card">
           <h2>All axes</h2>
           <div id="axes" class="axes-grid"></div>
         </div>
-
         <div class="card">
           <h2>Per-question detail</h2>
           <p class="faint">Ranked lowest first. Higher is healthier.</p>
           <div id="breakdown"></div>
         </div>
-
         <p id="guidance" class="guidance"></p>
       </div>
     </section>

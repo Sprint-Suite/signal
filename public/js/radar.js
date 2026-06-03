@@ -11,18 +11,25 @@
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+function cssVar(name, fallback) {
+  if (typeof document === "undefined") return fallback;
+  const root = document.querySelector(".ins") || document.documentElement;
+  const v = getComputedStyle(root).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
 const RADAR = {
   width: 600,
   height: 460,
   radius: 150,
   scaleMax: 5,
-  accent: "#1D9E75",
-  accentFill: "rgba(29,158,117,0.16)",
-  baseline: "#888780",
-  baselineFill: "rgba(136,135,128,0.12)",
-  guide: "#E3E3DF",
-  text: "#2A2A28",
-  textMuted: "#6B6B66"
+  accent:       cssVar("--radar-now", "#1D9E75"),
+  accentFill:   cssVar("--radar-now-fill", "rgba(29,158,117,0.16)"),
+  baseline:     cssVar("--radar-baseline", "#888780"),
+  baselineFill: cssVar("--radar-baseline-fill", "rgba(136,135,128,0.12)"),
+  guide:        cssVar("--radar-guide", "#E3E3DF"),
+  text:         cssVar("--radar-text", "#2A2A28"),
+  textMuted:    cssVar("--radar-textmuted", "#6B6B66")
 };
 
 function svgEl(tag, attrs) {

@@ -10,11 +10,10 @@ const PUBLIC_PAGES = [
 const AUTH_PAGES = [
   { path: "/dashboard", title: "Surveys" },
   { path: "/admin", title: "Teams & admins" },
-  // survey has two .header-band elements; first() targets the builder one
+  // survey has two .band elements; first() targets the builder one
   { path: "/survey", title: "New survey" }
 ];
 
-// Inject the hub-backed session cookie (sign-in is delegated to the hub).
 async function signIn(page) {
   await authenticate(page.context());
 }
@@ -22,45 +21,37 @@ async function signIn(page) {
 function attachErrorListeners(page) {
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e)));
-  page.on("console", (m) => {
-    if (m.type() === "error") errs.push(m.text());
-  });
+  page.on("console", (m) => { if (m.type() === "error") errs.push(m.text()); });
   return errs;
 }
 
-async function assertSizedCanvas(band) {
-  // Canvas.width is set by the component's resize() to host width × devicePixelRatio.
-  // A non-zero value proves the component initialised and the host had real dimensions —
-  // catches the "hidden section returns 0×0 from getBoundingClientRect" regression.
-  await expect
-    .poll(async () => band.locator("canvas").evaluate((c) => c.width))
-    .toBeGreaterThan(0);
+async function assertOscilloscope(band) {
+  // oscilloscope.js mounts an <svg> trace into the empty .waves container.
+  await expect.poll(async () => band.locator(".waves svg").count()).toBeGreaterThan(0);
 }
 
-test.describe("breathing-waves header band", () => {
-  test("renders on public license page with aria-hidden canvas", async ({ page }) => {
+test.describe("Instrument oscilloscope band", () => {
+  test("renders on the public license page", async ({ page }) => {
     const errs = attachErrorListeners(page);
     for (const { path, title } of PUBLIC_PAGES) {
       await page.goto(path);
-      const band = page.locator(".header-band[data-breathing-waves]").first();
+      const band = page.locator(".band").first();
       await expect(band).toBeVisible();
-      await expect(band.locator("canvas")).toHaveAttribute("aria-hidden", "true");
-      await expect(band.locator(".header-title")).toContainText(title);
-      await assertSizedCanvas(band);
+      await expect(band.locator("h1")).toContainText(title);
+      await assertOscilloscope(band);
     }
     expect(errs).toEqual([]);
   });
 
-  test("renders on auth-gated pages with aria-hidden canvas", async ({ page }) => {
+  test("renders on auth-gated pages", async ({ page }) => {
     const errs = attachErrorListeners(page);
     await signIn(page);
     for (const { path, title } of AUTH_PAGES) {
       await page.goto(path);
-      const band = page.locator(".header-band[data-breathing-waves]").first();
+      const band = page.locator(".band").first();
       await expect(band).toBeVisible();
-      await expect(band.locator("canvas")).toHaveAttribute("aria-hidden", "true");
-      await expect(band.locator(".header-title").first()).toContainText(title);
-      await assertSizedCanvas(band);
+      await expect(band.locator("h1").first()).toContainText(title);
+      await assertOscilloscope(band);
     }
     expect(errs).toEqual([]);
   });
