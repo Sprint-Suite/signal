@@ -10,11 +10,13 @@
   <script src="/js/admin.js" defer></script>
   <script type="module" src="/js/oscilloscope.js"></script>
   <script src="/auth-client/heartbeat.js" defer></script>
+  <script src="/auth-client/suite-return.js" defer></script>
 </head>
 <body class="ins" data-app="signal">
   <header class="topbar">
     <a href="/" class="brand"><svg class="mk" width="22" height="22" aria-hidden="true"><use href="/illos/glyphs.svg#glyph-signal"/></svg> Signal</a>
     <span class="topbar-actions">
+      <a class="btn btn-ghost btn-sm" data-suite-return hidden>Return to Suite</a>
       <a class="btn btn-ghost btn-sm" href="/dashboard">All surveys</a>
       <button id="signout-btn" class="btn btn-ghost btn-sm" type="button">Sign out</button>
     </span>
