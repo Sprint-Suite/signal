@@ -20,6 +20,7 @@ if (fs.existsSync(envPath) && typeof process.loadEnvFile === "function") {
 }
 
 const db = require("./lib/db");
+const { logger } = require("./lib/logger.js");
 const { createAuthClient } = require("@suite/auth-client");
 const { getBuildInfo } = require("./lib/buildInfo");
 const { getActivityFilePath } = require("./lib/adminActivity");
@@ -57,11 +58,11 @@ const app = createHttpApp({
 });
 
 const server = app.listen(PORT, HOST, () => {
-  console.log(`Signal listening on http://${HOST}:${PORT} (${NODE_ENV})`);
+  logger.info({ port: Number(PORT) }, "signal listening");
 });
 
 function shutdown(signal) {
-  console.log(`${signal} received — shutting down.`);
+  logger.info({ signal }, "shutdown signal received");
   server.close(() => {
     try {
       conn.close();
