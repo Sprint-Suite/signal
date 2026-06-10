@@ -123,6 +123,28 @@ test("security headers: all 6 required headers present on /health", async () => 
       !scriptSrc.includes("'unsafe-inline'"),
       `script-src must not contain 'unsafe-inline'; got script-src:${scriptSrc}`
     );
+
+    // No-cache headers — survey data must never be held by a proxy or CDN.
+    const cc = res.headers.get("cache-control") || "";
+    assert.ok(
+      cc.includes("no-store"),
+      `Cache-Control must contain no-store; got: ${cc}`
+    );
+    assert.equal(
+      res.headers.get("pragma"),
+      "no-cache",
+      "Pragma must be no-cache"
+    );
+    assert.equal(
+      res.headers.get("expires"),
+      "0",
+      "Expires must be 0"
+    );
+    assert.equal(
+      res.headers.get("surrogate-control"),
+      "no-store",
+      "Surrogate-Control must be no-store"
+    );
   } finally {
     await app.close();
   }
@@ -204,4 +226,14 @@ test("security headers: unit — makeSecurityHeaders factory returns middleware 
   const scriptSrcMatch = csp.match(/script-src([^;]*)/);
   const scriptSrc = scriptSrcMatch ? scriptSrcMatch[1] : "";
   assert.ok(!scriptSrc.includes("'unsafe-inline'"), "script-src must not be unsafe-inline");
+
+  // No-cache headers
+  assert.equal(
+    headers["Cache-Control"],
+    "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+    "Cache-Control must be the full no-store directive"
+  );
+  assert.equal(headers["Pragma"], "no-cache", "Pragma must be no-cache");
+  assert.equal(headers["Expires"], "0", "Expires must be 0");
+  assert.equal(headers["Surrogate-Control"], "no-store", "Surrogate-Control must be no-store");
 });

@@ -56,6 +56,14 @@ function makeSecurityHeaders({
     res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
     res.removeHeader("X-Powered-By");
     res.removeHeader("Server");
+    // Survey data is sensitive and always fresh — never let a cache hold it.
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+    );
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
     next();
   };
 }
