@@ -34,7 +34,7 @@ after(() => {
  * hub: the tests never trigger a hub call because they seed a *fresh* local
  * session, which requireAuth serves straight from its cache (age < cacheTtl).
  */
-async function startApp() {
+async function startApp({ publicDir } = {}) {
   const conn = db.initDb(":memory:");
   const auth = createAuthClient({
     appName: "signal-test",
@@ -47,7 +47,7 @@ async function startApp() {
     conn,
     auth,
     buildInfo: { version: "test", commit: "testsha" },
-    publicDir: path.join(os.tmpdir(), "signal-no-public"),
+    publicDir: publicDir || path.join(os.tmpdir(), "signal-no-public"),
     activityFile: ACTIVITY_FILE,
     appBaseUrl: "http://localhost"
   });
@@ -117,6 +117,20 @@ test("/health reports status and build info", async () => {
     assert.equal(json.status, "ok");
     assert.equal(json.schemaVersion, 2);
     assert.equal(json.version, "test");
+  } finally {
+    await app.close();
+  }
+});
+
+test("/robots.txt is served publicly", async () => {
+  const app = await startApp({
+    publicDir: path.join(__dirname, "..", "public")
+  });
+  try {
+    const { status, text } = await api(app.base, "GET", "/robots.txt");
+    assert.equal(status, 200);
+    assert.match(text, /User-agent: \*/);
+    assert.match(text, /Allow: \//);
   } finally {
     await app.close();
   }
