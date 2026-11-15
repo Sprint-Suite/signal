@@ -23,8 +23,8 @@ after(() => {
   }
 });
 
-async function startApp() {
-  const conn = db.initDb(":memory:");
+async function startApp({ dbPath = ":memory:" } = {}) {
+  const conn = db.initDb(dbPath);
   const auth = createAuthClient({
     appName: "signal-test",
     hubBaseUrl: "http://hub.invalid",

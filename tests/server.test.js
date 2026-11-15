@@ -222,6 +222,11 @@ test("full survey lifecycle: team, survey, responses, report, breakdown, CSV", a
       assert.equal(submit.status, 201);
     }
 
+    // Three responses alone do not unlock it: results publish on close.
+    const stillLocked = await api(app.base, "GET", `/api/surveys/${survey.id}/report`, { cookie });
+    assert.equal(stillLocked.json.reason, "not-closed");
+    await api(app.base, "POST", `/api/surveys/${survey.id}/close`, { cookie });
+
     // Report now unlocks.
     const report = await api(
       app.base,
@@ -362,6 +367,7 @@ test("a follow-up survey overlays its baseline on the report", async () => {
       cookie
     });
     const followUp = await runSurvey(baseline.id);
+    await api(app.base, "POST", `/api/surveys/${followUp.id}/close`, { cookie });
 
     const report = await api(
       app.base,

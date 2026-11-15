@@ -9,6 +9,15 @@ function weatherForScore(score) {
   return                    { glyph: "rain",  cls: "axis-glyph-rain" };
 }
 
+const LOCKED_COPY = {
+  "not-closed": "Results appear when you close the survey.",
+  "below-minimum": "Results need at least 3 responses. Reopen the survey to collect more."
+};
+
+function pendingCopy(n) {
+  return `${n} newer responses will be included once the survey closes with at least 3 of them.`;
+}
+
 (function () {
   const surveyId = qsParam("id");
 
@@ -350,13 +359,11 @@ function weatherForScore(score) {
     renderControls(id, res.data);
 
     if (res.data.locked) {
-      notice(
-        byId("report-locked"),
-        `This report stays hidden until the survey has 3 responses ` +
-          `(currently ${res.data.responseCount}) — it protects anonymity.`,
-        "info"
-      );
+      notice(byId("report-locked"), LOCKED_COPY[res.data.reason] || LOCKED_COPY["not-closed"], "info");
       return;
+    }
+    if (res.data.pendingCount > 0) {
+      notice(byId("report-locked"), pendingCopy(res.data.pendingCount), "info");
     }
 
     show(byId("report-body"));

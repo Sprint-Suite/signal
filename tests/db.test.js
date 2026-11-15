@@ -4,6 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const db = require("../lib/db");
+const { publishPending } = require("../lib/publication");
 
 // A fresh in-memory database, migrated and seeded, for each test.
 function freshDb() {
@@ -229,6 +230,8 @@ test("submitResponse persists a response and its answers atomically", () => {
     answers: questions.map((q) => ({ questionId: q.id, score: 3 }))
   });
   assert.equal(db.countResponses(conn, survey.id), 2);
+  assert.equal(db.countFlaggedResponses(conn, survey.id), 0, "unpublished flags are hidden");
+  publishPending(conn, survey.id, 1);
   assert.equal(db.countFlaggedResponses(conn, survey.id), 1);
   conn.close();
 });
@@ -255,6 +258,8 @@ test("getScoringInputForSurvey returns rows ready for the scoring engine", () =>
     answers: questions.map((q) => ({ questionId: q.id, score: 4 }))
   });
 
+  assert.equal(db.getScoringInputForSurvey(conn, survey.id).length, 0);
+  publishPending(conn, survey.id, 1);
   const rows = db.getScoringInputForSurvey(conn, survey.id);
   assert.equal(rows.length, 24);
   for (const row of rows) {
@@ -287,6 +292,7 @@ test("listSurveysWithCounts joins team/template names and response counts", () =
     answers: questions.map((q) => ({ questionId: q.id, score: 4 }))
   });
 
+  publishPending(conn, survey.id, 1);
   const list = db.listSurveysWithCounts(conn);
   assert.equal(list.length, 1);
   assert.equal(list[0].team_name, "Falcons");
