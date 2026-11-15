@@ -18,6 +18,10 @@
         <h1>This survey is closed</h1>
         <p class="muted">It is no longer accepting responses. Thank you anyway.</p>
       </div>
+      <div id="respond-used" class="hidden">
+        <h1>Link already used</h1>
+        <p class="muted">This link has already been used. Each link can be used once.</p>
+      </div>
       <div id="respond-question" class="hidden">
         <div class="progress-track">
           <div id="progress-fill" class="progress-fill"></div>
@@ -44,6 +48,12 @@
     <p class="footer-note">
       This survey is anonymous. There is no login, and individual answers are
       never shown to anyone — only team-level summaries.
+    </p>
+    <p class="footer-note">
+      Signal stores no name or email with your answers, and stores no record of
+      which link they came from. Whoever sent you this link can see that it has
+      been used, but not what you answered. Results are shown only for groups of
+      at least 3 people.
     </p>
   </main>
   <footer class="app-footer"><a href="/license">License</a></footer>

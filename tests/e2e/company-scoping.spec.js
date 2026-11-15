@@ -33,14 +33,15 @@ async function anyTemplateId(request, cred) {
   return (await res.json()).templates[0].id;
 }
 
-// Open a survey for the given company; returns the survey summary (incl. accessCode).
+// Open a survey for the given company; returns the survey summary plus its invite codes.
 async function createSurvey(request, cred, teamId, templateId) {
   const res = await request.post("/api/surveys", {
     headers: { Cookie: cookieFor(cred) },
-    data: { teamId, templateId }
+    data: { teamId, templateId, inviteCount: 3 }
   });
   expect(res.status(), "POST /api/surveys should succeed").toBe(201);
-  return (await res.json()).survey;
+  const body = await res.json();
+  return { ...body.survey, codes: body.inviteLinks.map((link) => link.split("/").pop()) };
 }
 
 test("a facilitator sees only their own company's teams", async ({ request }) => {
@@ -82,12 +83,12 @@ test("the anonymous respondent flow still submits end-to-end", async ({
   page,
   request
 }) => {
-  // Company A opens a survey via the API and captures its access code.
+  // Company A opens a survey via the API and captures an invite code.
   const stamp = Date.now();
   const teamA = await createTeam(request, credentials.companyA, `A resp ${stamp}`);
   const templateId = await anyTemplateId(request, credentials.companyA);
   const surveyA = await createSurvey(request, credentials.companyA, teamA.id, templateId);
-  const code = surveyA.accessCode;
+  const code = surveyA.codes[0];
   expect(code).toBeTruthy();
 
   // A REAL anonymous respondent — no auth cookie on this browser context —

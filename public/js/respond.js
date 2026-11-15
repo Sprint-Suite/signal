@@ -1,7 +1,7 @@
 "use strict";
 
 (function () {
-  // The access code is the last path segment of /s/CODE.
+  // The invite code is the last path segment of /s/CODE.
   const code = window.location.pathname.split("/").filter(Boolean).pop();
 
   const SCALE_LABELS = {
@@ -108,6 +108,10 @@
     const res = await apiGet(`/api/respond/${encodeURIComponent(code)}`);
     hide(byId("respond-loading"));
 
+    if (res.data && res.data.used) {
+      show(byId("respond-used"));
+      return;
+    }
     if (res.status === 404 || !res.data || res.data.open === false) {
       show(byId("respond-closed"));
       return;

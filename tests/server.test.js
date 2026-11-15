@@ -12,6 +12,7 @@ const crypto = require("node:crypto");
 const db = require("../lib/db");
 const { createAuthClient } = require("@suite/auth-client");
 const { createHttpApp } = require("../lib/httpApp");
+const { codeOf } = require("./helpers/app");
 
 const ACTIVITY_FILE = path.join(
   os.tmpdir(),
@@ -183,14 +184,16 @@ test("full survey lifecycle: team, survey, responses, report, breakdown, CSV", a
 
     const created = await api(app.base, "POST", "/api/surveys", {
       cookie,
-      body: { teamId: team.json.team.id, templateId }
+      body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
     });
     assert.equal(created.status, 201);
     const survey = created.json.survey;
-    assert.ok(survey.link.includes("/s/"));
+    const codes = created.json.inviteLinks.map(codeOf);
+    assert.equal(codes.length, 3);
+    assert.ok(created.json.inviteLinks.every((link) => link.includes("/s/")));
 
     // Public respondent fetches the questions (no cookie).
-    const form = await api(app.base, "GET", `/api/respond/${survey.accessCode}`);
+    const form = await api(app.base, "GET", `/api/respond/${codes[0]}`);
     assert.equal(form.status, 200);
     assert.equal(form.json.open, true);
     assert.equal(form.json.questions.length, 24);
@@ -213,7 +216,7 @@ test("full survey lifecycle: team, survey, responses, report, breakdown, CSV", a
       const submit = await api(
         app.base,
         "POST",
-        `/api/respond/${survey.accessCode}`,
+        `/api/respond/${codes[r]}`,
         { body: { answers, durationSeconds: 200 } }
       );
       assert.equal(submit.status, 201);
@@ -264,13 +267,15 @@ test("response submission is validated", async () => {
       cookie,
       body: { name: "Falcons" }
     });
-    const survey = (
+    const created = (
       await api(app.base, "POST", "/api/surveys", {
         cookie,
-        body: { teamId: team.json.team.id, templateId }
+        body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
       })
-    ).json.survey;
-    const form = await api(app.base, "GET", `/api/respond/${survey.accessCode}`);
+    ).json;
+    const survey = created.survey;
+    const code = codeOf(created.inviteLinks[0]);
+    const form = await api(app.base, "GET", `/api/respond/${code}`);
     const fullAnswers = form.json.questions.map((q) => ({
       questionId: q.id,
       score: 4
@@ -280,7 +285,7 @@ test("response submission is validated", async () => {
     const incomplete = await api(
       app.base,
       "POST",
-      `/api/respond/${survey.accessCode}`,
+      `/api/respond/${code}`,
       { body: { answers: fullAnswers.slice(0, 10), durationSeconds: 100 } }
     );
     assert.equal(incomplete.status, 400);
@@ -289,7 +294,7 @@ test("response submission is validated", async () => {
     const badScore = await api(
       app.base,
       "POST",
-      `/api/respond/${survey.accessCode}`,
+      `/api/respond/${code}`,
       {
         body: {
           answers: fullAnswers.map((a, i) =>
@@ -306,7 +311,7 @@ test("response submission is validated", async () => {
     const closed = await api(
       app.base,
       "POST",
-      `/api/respond/${survey.accessCode}`,
+      `/api/respond/${code}`,
       { body: { answers: fullAnswers, durationSeconds: 100 } }
     );
     assert.equal(closed.status, 409);
@@ -331,18 +336,15 @@ test("a follow-up survey overlays its baseline on the report", async () => {
 
     async function runSurvey(parentSurveyId) {
       const body = parentSurveyId
-        ? { parentSurveyId }
-        : { teamId, templateId };
-      const survey = (
+        ? { parentSurveyId, inviteCount: 3 }
+        : { teamId, templateId, inviteCount: 3 };
+      const created = (
         await api(app.base, "POST", "/api/surveys", { cookie, body })
-      ).json.survey;
-      const form = await api(
-        app.base,
-        "GET",
-        `/api/respond/${survey.accessCode}`
-      );
+      ).json;
+      const codes = created.inviteLinks.map(codeOf);
+      const form = await api(app.base, "GET", `/api/respond/${codes[0]}`);
       for (let r = 0; r < 3; r += 1) {
-        await api(app.base, "POST", `/api/respond/${survey.accessCode}`, {
+        await api(app.base, "POST", `/api/respond/${codes[r]}`, {
           body: {
             answers: form.json.questions.map((q, i) => ({
               questionId: q.id,
@@ -352,7 +354,7 @@ test("a follow-up survey overlays its baseline on the report", async () => {
           }
         });
       }
-      return survey;
+      return created.survey;
     }
 
     const baseline = await runSurvey(null);
@@ -444,7 +446,7 @@ test("a company cannot read or transition another company's survey (404)", async
     const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
     const created = await api(app.base, "POST", "/api/surveys", {
       cookie: cookieA,
-      body: { teamId: team.json.team.id, templateId }
+      body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
     });
     const surveyId = created.json.survey.id;
 
@@ -474,7 +476,7 @@ test("creating a survey under another company's team is rejected (400)", async (
     const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
     const attempt = await api(app.base, "POST", "/api/surveys", {
       cookie: cookieB,
-      body: { teamId: team.json.team.id, templateId }
+      body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
     });
     assert.equal(attempt.status, 400);
   } finally {
@@ -494,7 +496,7 @@ test("a company cannot read another company's report/breakdown/export (404)", as
     const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
     const created = await api(app.base, "POST", "/api/surveys", {
       cookie: cookieA,
-      body: { teamId: team.json.team.id, templateId }
+      body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
     });
     const surveyId = created.json.survey.id;
 
@@ -525,7 +527,7 @@ test("creating a follow-up under another company's baseline survey is rejected (
     const team = await api(app.base, "POST", "/api/teams", { cookie: cookieA, body: { name: "Alpha" } });
     const baseline = await api(app.base, "POST", "/api/surveys", {
       cookie: cookieA,
-      body: { teamId: team.json.team.id, templateId }
+      body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
     });
     const surveyId = baseline.json.survey.id;
 
@@ -533,7 +535,7 @@ test("creating a follow-up under another company's baseline survey is rejected (
 
     const attempt = await api(app.base, "POST", "/api/surveys", {
       cookie: cookieB,
-      body: { parentSurveyId: surveyId }
+      body: { parentSurveyId: surveyId, inviteCount: 3 }
     });
     assert.equal(attempt.status, 400);
   } finally {

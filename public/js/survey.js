@@ -17,15 +17,6 @@ function weatherForScore(score) {
     notice(byId("page-error"), message, "error");
   }
 
-  async function copyAndFlash(button, text) {
-    const ok = await copyText(text);
-    const original = button.textContent;
-    button.textContent = ok ? "Copied" : "Copy failed";
-    window.setTimeout(() => {
-      button.textContent = original;
-    }, 1500);
-  }
-
   function formatDate(iso) {
     return iso ? new Date(iso).toLocaleDateString() : "";
   }
@@ -137,6 +128,11 @@ function weatherForScore(score) {
 
     byId("create-btn").addEventListener("click", async () => {
       hide(byId("builder-error"));
+      const inviteCount = Number(byId("invite-count").value);
+      if (!Number.isInteger(inviteCount) || inviteCount < 3 || inviteCount > 50) {
+        notice(byId("builder-error"), "Enter how many people will answer: 3 to 50.", "error");
+        return;
+      }
       let body;
       if (isFollowUp()) {
         if (!baselineSelect.value) {
@@ -147,11 +143,12 @@ function weatherForScore(score) {
           );
           return;
         }
-        body = { parentSurveyId: baselineSelect.value };
+        body = { parentSurveyId: baselineSelect.value, inviteCount };
       } else {
         body = {
           teamId: teamSelect.value,
-          templateId: byId("template-select").value
+          templateId: byId("template-select").value,
+          inviteCount
         };
       }
 
@@ -166,11 +163,7 @@ function weatherForScore(score) {
         );
         return;
       }
-      const link = res.data.survey.link;
-      byId("result-link").textContent = link;
-      byId("copy-result").addEventListener("click", () =>
-        copyAndFlash(byId("copy-result"), link)
-      );
+      showInviteLinks(byId("result-links"), byId("copy-result"), res.data.inviteLinks);
       hide(byId("builder-form"));
       show(byId("builder-result"));
     });
@@ -200,13 +193,19 @@ function weatherForScore(score) {
     byId("report-sub").textContent = bits.join(" · ");
   }
 
+  async function renderInviteUsage(id, isOpen) {
+    const res = await apiGet(`/api/surveys/${encodeURIComponent(id)}`);
+    if (!res.ok) return;
+    const usage = { used: res.data.survey.invitesUsed, total: res.data.survey.invitesTotal };
+    byId("invite-usage").textContent = inviteUsageText(usage.used, usage.total);
+    if (!isOpen) return;
+    show(byId("add-links"));
+    wireAddLinks(id, usage);
+  }
+
   function renderControls(id, data) {
     const s = data.survey;
-    const link = `${window.location.origin}/s/${s.accessCode}`;
-    byId("share-link").textContent = link;
-    byId("copy-share").addEventListener("click", () =>
-      copyAndFlash(byId("copy-share"), link)
-    );
+    renderInviteUsage(id, s.status === "open");
 
     if (!data.locked) {
       const csv = byId("csv-link");

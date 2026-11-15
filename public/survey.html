@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/signal.css">
   <script src="/js/api.js" defer></script>
   <script src="/js/radar.js" defer></script>
+  <script src="/js/invites.js" defer></script>
   <script src="/js/survey.js" defer></script>
   <script type="module" src="/js/oscilloscope.js"></script>
   <script src="/auth-client/heartbeat.js" defer></script>
@@ -58,17 +59,21 @@
           <span>Baseline survey to compare against</span>
           <select id="baseline-select"></select>
         </label>
+        <label class="field" for="invite-count">
+          <span>How many people will answer?</span>
+          <input type="number" id="invite-count" min="3" max="50" step="1" required>
+        </label>
         <p id="builder-error" class="notice notice-error hidden"></p>
         <button id="create-btn" class="btn btn-pri" type="button">
-          Create &amp; generate link
+          Create &amp; generate links
         </button>
       </div>
       <div id="builder-result" class="card hidden">
         <h2>Survey created</h2>
-        <p class="muted">Share this anonymous link with the team:</p>
-        <p id="result-link" class="key-box"></p>
+        <p class="muted">Give each person one link. Each link works once. These links are shown only now — copy them before leaving this page.</p>
+        <div id="result-links"></div>
         <div class="row">
-          <button id="copy-result" class="btn btn-ghost btn-sm" type="button">Copy link</button>
+          <button id="copy-result" class="btn btn-ghost btn-sm" type="button">Copy all links</button>
           <a class="btn btn-sm btn-pri" href="/dashboard">Done</a>
         </div>
       </div>
@@ -81,10 +86,22 @@
         <p id="report-sub" class="sub"></p>
       </div></div>
       <div class="card" id="report-controls">
-        <h3>Survey link</h3>
-        <p id="share-link" class="key-box"></p>
+        <h3>Invite links</h3>
+        <p id="invite-usage" class="muted"></p>
+        <div id="add-links" class="row hidden">
+          <label class="field" for="add-count">
+            <span>How many more links?</span>
+            <input type="number" id="add-count" min="1" max="50" step="1" value="1">
+          </label>
+          <button id="add-links-btn" class="btn btn-ghost btn-sm" type="button">Add links</button>
+        </div>
+        <p id="invite-message" class="notice hidden"></p>
+        <div id="new-links-block" class="hidden">
+          <p class="muted">Give each person one link. Each link works once. These links are shown only now — copy them before leaving this page.</p>
+          <div id="new-links"></div>
+          <button id="copy-new" class="btn btn-ghost btn-sm" type="button">Copy all links</button>
+        </div>
         <div class="row">
-          <button id="copy-share" class="btn btn-ghost btn-sm" type="button">Copy link</button>
           <a id="csv-link" class="btn btn-ghost btn-sm hidden" href="#">Export CSV</a>
           <button id="toggle-status" class="btn btn-ghost btn-sm" type="button"></button>
           <button id="delete-survey" class="btn btn-sm btn-danger" type="button">Delete</button>

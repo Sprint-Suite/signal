@@ -27,6 +27,7 @@ test("dashboard groups surveys by team and template; builder optgroups baselines
   const firstTemplateLabel = (
     await page.locator("#template-select option:checked").textContent()
   ).trim();
+  await page.fill("#invite-count", "3");
   await page.click("#create-btn");
   await expect(page.locator("#builder-result")).toBeVisible();
 
@@ -37,6 +38,7 @@ test("dashboard groups surveys by team and template; builder optgroups baselines
   const otherLabel = optionTexts.map((s) => s.trim()).find((s) => s !== firstTemplateLabel);
   expect(otherLabel).toBeTruthy();
   await page.selectOption("#template-select", { label: otherLabel });
+  await page.fill("#invite-count", "3");
   await page.click("#create-btn");
   await expect(page.locator("#builder-result")).toBeVisible();
 

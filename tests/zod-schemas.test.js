@@ -165,7 +165,7 @@ test("teamSchema: strips unknown keys", () => {
 // ============================================================================
 
 test("surveySchema: valid survey body passes (teamId + templateId)", () => {
-  const result = surveySchema.safeParse({ teamId: "t-1", templateId: "tmpl-1" });
+  const result = surveySchema.safeParse({ teamId: "t-1", templateId: "tmpl-1", inviteCount: 3 });
   assert.ok(result.success);
   assert.equal(result.data.teamId, "t-1");
   assert.equal(result.data.templateId, "tmpl-1");
@@ -173,15 +173,19 @@ test("surveySchema: valid survey body passes (teamId + templateId)", () => {
 });
 
 test("surveySchema: follow-up body passes (parentSurveyId only)", () => {
-  const result = surveySchema.safeParse({ parentSurveyId: "survey-1" });
+  const result = surveySchema.safeParse({ parentSurveyId: "survey-1", inviteCount: 3 });
   assert.ok(result.success);
   assert.equal(result.data.parentSurveyId, "survey-1");
   assert.equal(result.data.teamId, null);
   assert.equal(result.data.templateId, null);
 });
 
-test("surveySchema: empty body defaults all fields to null", () => {
-  const result = surveySchema.safeParse({});
+test("surveySchema: empty body is rejected (inviteCount is required)", () => {
+  assert.equal(surveySchema.safeParse({}).success, false);
+});
+
+test("surveySchema: omitted ids default to null", () => {
+  const result = surveySchema.safeParse({ inviteCount: 3 });
   assert.ok(result.success);
   assert.equal(result.data.teamId, null);
   assert.equal(result.data.templateId, null);
@@ -189,7 +193,7 @@ test("surveySchema: empty body defaults all fields to null", () => {
 });
 
 test("surveySchema: strips unknown keys", () => {
-  const result = surveySchema.safeParse({ teamId: "t-1", templateId: "tmpl-1", evil: "x" });
+  const result = surveySchema.safeParse({ teamId: "t-1", templateId: "tmpl-1", inviteCount: 3, evil: "x" });
   assert.ok(result.success);
   assert.ok(!("evil" in result.data));
 });
@@ -201,6 +205,7 @@ test("surveySchema: strips unknown keys", () => {
 const db = require("../lib/db");
 const { createAuthClient } = require("@suite/auth-client");
 const { createHttpApp } = require("../lib/httpApp");
+const { codeOf } = require("./helpers/app");
 
 const ACTIVITY_FILE = path.join(
   os.tmpdir(),
@@ -281,7 +286,7 @@ test("POST /api/respond/:code — no answers → 400", async () => {
   const app = await startApp();
   try {
     const cookie = loginAsAdmin(app);
-    // Create a survey to get a valid access code.
+    // Create a survey to get an invite code.
     const templateId = (
       await api(app.base, "GET", "/api/templates", { cookie })
     ).json.templates[0].id;
@@ -289,15 +294,17 @@ test("POST /api/respond/:code — no answers → 400", async () => {
       cookie,
       body: { name: "TestTeam" }
     });
-    const survey = (
-      await api(app.base, "POST", "/api/surveys", {
-        cookie,
-        body: { teamId: team.json.team.id, templateId }
-      })
-    ).json.survey;
+    const code = codeOf(
+      (
+        await api(app.base, "POST", "/api/surveys", {
+          cookie,
+          body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
+        })
+      ).json.inviteLinks[0]
+    );
 
     // Submit with no answers field.
-    const res = await api(app.base, "POST", `/api/respond/${survey.accessCode}`, {
+    const res = await api(app.base, "POST", `/api/respond/${code}`, {
       body: { durationSeconds: 10 }
     });
     assert.equal(res.status, 400);
@@ -317,19 +324,21 @@ test("POST /api/respond/:code — out-of-range score → 400", async () => {
       cookie,
       body: { name: "TestTeam2" }
     });
-    const survey = (
-      await api(app.base, "POST", "/api/surveys", {
-        cookie,
-        body: { teamId: team.json.team.id, templateId }
-      })
-    ).json.survey;
-    const form = await api(app.base, "GET", `/api/respond/${survey.accessCode}`);
+    const code = codeOf(
+      (
+        await api(app.base, "POST", "/api/surveys", {
+          cookie,
+          body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
+        })
+      ).json.inviteLinks[0]
+    );
+    const form = await api(app.base, "GET", `/api/respond/${code}`);
     const badAnswers = form.json.questions.map((q, i) => ({
       questionId: q.id,
       score: i === 0 ? SCALE_MAX + 4 : 3 // first answer has invalid score
     }));
 
-    const res = await api(app.base, "POST", `/api/respond/${survey.accessCode}`, {
+    const res = await api(app.base, "POST", `/api/respond/${code}`, {
       body: { answers: badAnswers, durationSeconds: 10 }
     });
     assert.equal(res.status, 400);
@@ -349,14 +358,16 @@ test("POST /api/respond/:code — answers not an array → 400", async () => {
       cookie,
       body: { name: "TestTeam3" }
     });
-    const survey = (
-      await api(app.base, "POST", "/api/surveys", {
-        cookie,
-        body: { teamId: team.json.team.id, templateId }
-      })
-    ).json.survey;
+    const code = codeOf(
+      (
+        await api(app.base, "POST", "/api/surveys", {
+          cookie,
+          body: { teamId: team.json.team.id, templateId, inviteCount: 3 }
+        })
+      ).json.inviteLinks[0]
+    );
 
-    const res = await api(app.base, "POST", `/api/respond/${survey.accessCode}`, {
+    const res = await api(app.base, "POST", `/api/respond/${code}`, {
       body: { answers: "not-an-array" }
     });
     assert.equal(res.status, 400);
