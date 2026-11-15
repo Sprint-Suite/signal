@@ -215,6 +215,10 @@ test("submitResponse persists a response and its answers atomically", () => {
   });
   assert.ok(responseId);
   assert.equal(db.countResponses(conn, survey.id), 1);
+  const { submitted_at: submittedAt } = conn
+    .prepare("SELECT submitted_at FROM responses WHERE id = ?")
+    .get(responseId);
+  assert.match(submittedAt, /^\d{4}-\d{2}-\d{2}$/, "submission time is stored as a UTC date only");
   assert.equal(db.countFlaggedResponses(conn, survey.id), 0);
 
   // A flagged response bumps only the flagged count.

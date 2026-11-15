@@ -90,3 +90,21 @@ test("never logs response headers (Set-Cookie stays private)", async () => {
   assert.ok(rec);
   assert.equal(rec.res.statusCode, 200);
 });
+
+test("never logs an invite code from respondent paths", async () => {
+  const cap = capture();
+  const app = express();
+  app.use(express.json());
+  app.use(makeRequestLogger(createLogger({ level: "info", stream: cap.stream })));
+  app.get("/s/:code", (req, res) => res.send("page"));
+  app.get("/api/respond/:code", (req, res) => res.json({ open: true }));
+  app.post("/api/respond/:code", (req, res) => res.status(201).json({ ok: true }));
+  const code = "Zq7InviteCode";
+  await request(app).get(`/s/${code}`);
+  await request(app).get(`/api/respond/${code}?token=abc`);
+  await request(app).post(`/api/respond/${code}`).send({ answers: [] });
+  await tick();
+  const urls = cap.records().filter((r) => r.req).map((r) => r.req.url);
+  assert.deepEqual(urls, ["/s/[code]", "/api/respond/[code]?token=[redacted]", "/api/respond/[code]"]);
+  assert.ok(!cap.text().includes(code));
+});
