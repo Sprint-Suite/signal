@@ -1,0 +1,4 @@
+{
+  "checkpoints": ["design-final", "major-refactor", "test-failure-diagnosis", "stage-review"],
+  "timeoutMs": 900000
+}
