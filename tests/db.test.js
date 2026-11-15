@@ -10,9 +10,9 @@ function freshDb() {
   return db.initDb(":memory:");
 }
 
-test("a fresh database is at schema version 2", () => {
+test("a fresh database is at schema version 3", () => {
   const conn = freshDb();
-  assert.equal(db.getSchemaVersion(conn), 2);
+  assert.equal(db.getSchemaVersion(conn), 3);
   conn.close();
 });
 
@@ -345,11 +345,8 @@ test("migrateToV2 wipes tenant tables, keeps the question bank, adds company_id"
   conn.close();
 });
 
-test("migrateToV2 cleanly upgrades a populated v1 database (FK-safe wipe)", () => {
-  // Build a REAL v1 database by replaying the exact v1 DDL (copied from
-  // migrateToV1) and stamping schema_version=1, since migrateToV1 isn't
-  // exported. openDatabase enforces foreign_keys = ON, so the v2 DROPs run
-  // against the same FK pressure a prod restart would face.
+// A real v1 database: the exact v1 DDL replayed, schema_version stamped 1.
+function buildV1Db() {
   const conn = db.openDatabase(":memory:");
   conn.exec(
     "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
@@ -432,6 +429,11 @@ test("migrateToV2 cleanly upgrades a populated v1 database (FK-safe wipe)", () =
   conn
     .prepare("INSERT INTO meta (key, value) VALUES ('schema_version', '1')")
     .run();
+  return conn;
+}
+
+test("migrateToV2 cleanly upgrades a populated v1 database (FK-safe wipe)", () => {
+  const conn = buildV1Db();
   assert.equal(db.getSchemaVersion(conn), 1);
 
   // Populate the question bank (must survive) and the tenant chain
@@ -476,8 +478,8 @@ test("migrateToV2 cleanly upgrades a populated v1 database (FK-safe wipe)", () =
   // Run the migration: current=1, so only migrateToV2 fires.
   db.ensureSchema(conn);
 
-  // 1. Schema is now at v2.
-  assert.equal(db.getSchemaVersion(conn), 2);
+  // 1. Schema is now at v3.
+  assert.equal(db.getSchemaVersion(conn), 3);
 
   // 2. Tenant tables wiped clean.
   assert.equal(conn.prepare("SELECT COUNT(*) AS n FROM teams").get().n, 0);
@@ -504,7 +506,7 @@ test("migrateToV2 cleanly upgrades a populated v1 database (FK-safe wipe)", () =
 test("migrateToV2 is idempotent on an already-v2 database", () => {
   const conn = freshDb(); // already at v2
   db.ensureSchema(conn);  // re-run: must not throw or change version
-  assert.equal(db.getSchemaVersion(conn), 2);
+  assert.equal(db.getSchemaVersion(conn), 3);
   conn.close();
 });
 
@@ -546,5 +548,83 @@ test("listSurveysWithCountsForCompany returns only that company's surveys", () =
 
   assert.equal(db.listSurveysWithCountsForCompany(conn, "co-b").length, 1);
   assert.equal(db.listSurveysWithCountsForCompany(conn, null).length, 0);
+  conn.close();
+});
+
+test("ensureSchema refuses a newer database without modifying it", () => {
+  const conn = freshDb();
+  conn.prepare("UPDATE meta SET value = '4' WHERE key = 'schema_version'").run();
+  assert.throws(() => db.ensureSchema(conn), /newer than this build supports/);
+  assert.equal(db.getSchemaVersion(conn), 4);
+  conn.close();
+});
+
+test("a failing migration rolls back completely", () => {
+  const conn = buildV1Db();
+  conn.exec("DROP TABLE teams; CREATE VIEW teams AS SELECT 1 AS id;");
+  assert.throws(() => db.ensureSchema(conn));
+  const names = conn
+    .prepare("SELECT name FROM sqlite_master WHERE name = 'surveys'")
+    .all();
+  assert.equal(names.length, 1, "surveys survives the failed migration");
+  assert.equal(db.getSchemaVersion(conn), 1);
+  conn.close();
+});
+
+test("v3 adds invites and responses.published", () => {
+  const conn = freshDb();
+  const tables = conn
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+    .all()
+    .map((t) => t.name);
+  assert.ok(tables.includes("invites"));
+  const cols = conn
+    .prepare("PRAGMA table_info(responses)")
+    .all()
+    .map((c) => c.name);
+  assert.ok(cols.includes("published"));
+  assert.equal(db.getSchemaVersion(conn), 3);
+  conn.close();
+});
+
+test("v3 backfill publishes only closed surveys at the floor", () => {
+  const conn = freshDb();
+  const template = db.getActiveTemplate(conn);
+  const team = db.createTeam(conn, {
+    companyId: "co-a", name: "T", keyHash: "h", keySalt: "s"
+  });
+  const seed = (code, status, n) => {
+    const s = db.createSurvey(conn, {
+      teamId: team.id, templateId: template.id, accessCode: code
+    });
+    conn.prepare("UPDATE surveys SET status = ? WHERE id = ?").run(status, s.id);
+    for (let i = 0; i < n; i++) {
+      conn
+        .prepare(
+          "INSERT INTO responses (id, survey_id, submitted_at) VALUES (?, ?, 'x')"
+        )
+        .run(`${code}-${i}`, s.id);
+    }
+    return s.id;
+  };
+  const ids = {
+    c1: seed("C1", "closed", 1),
+    c2: seed("C2", "closed", 2),
+    c3: seed("C3", "closed", 3),
+    o3: seed("O3", "open", 3)
+  };
+  // Step the database back to v2, then migrate forward.
+  conn.exec("DROP TABLE invites; ALTER TABLE responses DROP COLUMN published;");
+  conn.prepare("UPDATE meta SET value = '2' WHERE key = 'schema_version'").run();
+  db.ensureSchema(conn);
+
+  const published = (id) =>
+    conn
+      .prepare("SELECT COUNT(*) AS n FROM responses WHERE survey_id = ? AND published = 1")
+      .get(id).n;
+  assert.equal(published(ids.c1), 0);
+  assert.equal(published(ids.c2), 0);
+  assert.equal(published(ids.c3), 3);
+  assert.equal(published(ids.o3), 0);
   conn.close();
 });

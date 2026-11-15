@@ -116,7 +116,7 @@ test("/health reports status and build info", async () => {
     const { status, json } = await api(app.base, "GET", "/health");
     assert.equal(status, 200);
     assert.equal(json.status, "ok");
-    assert.equal(json.schemaVersion, 2);
+    assert.equal(json.schemaVersion, 3);
     assert.equal(json.version, "test");
   } finally {
     await app.close();
