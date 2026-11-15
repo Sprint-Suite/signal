@@ -90,8 +90,8 @@ test("security headers: all 6 required headers present on /health", async () => 
     // Referrer-Policy
     assert.equal(
       res.headers.get("referrer-policy"),
-      "strict-origin-when-cross-origin",
-      "Referrer-Policy must be strict-origin-when-cross-origin"
+      "no-referrer",
+      "Referrer-Policy must be no-referrer"
     );
 
     // Strict-Transport-Security
@@ -160,7 +160,7 @@ test("security headers: same headers present on public respondent API route", as
     assert.equal(res.headers.get("x-content-type-options"), "nosniff");
     assert.equal(
       res.headers.get("referrer-policy"),
-      "strict-origin-when-cross-origin"
+      "no-referrer"
     );
     assert.equal(
       res.headers.get("strict-transport-security"),
@@ -208,7 +208,7 @@ test("security headers: unit — makeSecurityHeaders factory returns middleware 
   assert.ok(nextCalled, "next() must be called");
   assert.equal(headers["X-Frame-Options"], "DENY");
   assert.equal(headers["X-Content-Type-Options"], "nosniff");
-  assert.equal(headers["Referrer-Policy"], "strict-origin-when-cross-origin");
+  assert.equal(headers["Referrer-Policy"], "no-referrer");
   assert.equal(
     headers["Strict-Transport-Security"],
     "max-age=31536000; includeSubDomains"
