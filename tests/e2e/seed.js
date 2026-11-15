@@ -53,6 +53,7 @@ for (const cred of [credentials, credentials.companyA, credentials.companyB]) {
     userId: cred.userId,
     centralSessionId: cred.centralSessionId,
     expiresAt: EXPIRES_AT,
+    entitled: true,
     company: cred.company
   });
 }

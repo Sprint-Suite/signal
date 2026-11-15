@@ -104,6 +104,7 @@ function loginAsAdmin(
     userId,
     centralSessionId: crypto.randomBytes(16).toString("hex"),
     expiresAt: Date.now() + 60 * 60 * 1000,
+    entitled: true,
     company
   });
   return `signal_session=${id}`;
