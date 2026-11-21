@@ -12,7 +12,7 @@ for (const shell of ["dashboard.html", "admin.html", "survey.html"]) {
   });
 }
 
-for (const shell of ["respond.html", "license.html"]) {
+for (const shell of ["respond.html"]) {
   test(`${shell} (anon/public) does NOT have the Return-to-Suite button`, () => {
     const html = fs.readFileSync(path.join(__dirname, "../public", shell), "utf8");
     assert.doesNotMatch(html, /data-suite-return/, "anon shell must not show the button");

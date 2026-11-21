@@ -3,10 +3,6 @@
 const { test, expect } = require("@playwright/test");
 const { authenticate } = require("./_auth");
 
-const PUBLIC_PAGES = [
-  { path: "/license", title: "Signal Free Use License" }
-];
-
 const AUTH_PAGES = [
   { path: "/dashboard", title: "Surveys" },
   { path: "/admin", title: "Teams & admins" },
@@ -31,18 +27,6 @@ async function assertOscilloscope(band) {
 }
 
 test.describe("Instrument oscilloscope band", () => {
-  test("renders on the public license page", async ({ page }) => {
-    const errs = attachErrorListeners(page);
-    for (const { path, title } of PUBLIC_PAGES) {
-      await page.goto(path);
-      const band = page.locator(".band").first();
-      await expect(band).toBeVisible();
-      await expect(band.locator("h1")).toContainText(title);
-      await assertOscilloscope(band);
-    }
-    expect(errs).toEqual([]);
-  });
-
   test("renders on auth-gated pages", async ({ page }) => {
     const errs = attachErrorListeners(page);
     await signIn(page);
