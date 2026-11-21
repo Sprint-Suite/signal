@@ -208,9 +208,6 @@
 .ins .radio-option input[type="radio"]{flex-shrink:0; margin-top:0.2em; width:1.125rem; height:1.125rem;}
 .ins .radio-option > span{line-height:1.45;}
 
-/* --- License text block (app.css) --------------------------------------- */
-.ins .license-text{font-family:var(--mono-font); font-size:0.8rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; background:var(--bone); border:1px solid var(--line); border-radius:var(--r-md); padding:var(--s-4); margin:var(--s-4) 0 0;}
-
 /* --- Motion (theme-core.css §6) ----------------------------------------- */
 @keyframes drift-in {
   from { opacity: 0; transform: translateY(10px); }
